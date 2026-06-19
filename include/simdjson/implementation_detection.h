@@ -14,6 +14,7 @@
 #define SIMDJSON_IMPLEMENTATION_ID_lasx 8
 //#define SIMDJSON_IMPLEMENTATION_ID_rvv 9
 #define SIMDJSON_IMPLEMENTATION_ID_rvv_vls 10
+#define SIMDJSON_IMPLEMENTATION_ID_stdsimd 11
 
 #define SIMDJSON_IMPLEMENTATION_ID_FOR(IMPL) SIMDJSON_CAT(SIMDJSON_IMPLEMENTATION_ID_, IMPL)
 #define SIMDJSON_IMPLEMENTATION_ID SIMDJSON_IMPLEMENTATION_ID_FOR(SIMDJSON_IMPLEMENTATION)
@@ -132,6 +133,29 @@
 #ifndef SIMDJSON_IMPLEMENTATION_RVV_VLS
 #define SIMDJSON_IMPLEMENTATION_RVV_VLS SIMDJSON_CAN_ALWAYS_RUN_RVV_VLS
 #endif
+
+// Portable std::simd backend. Available on x86-64 ONLY when the C++26 <simd>
+// header is usable (i.e. the TU is compiled as C++26 with GCC's std::simd). This
+// gate is essential: simdjson is frequently compiled at C++11/14/17 (e.g. the
+// quickstart/singleheader acceptance tests), and <simd>/std::simd does not exist
+// there. It is never auto-selected over the native ISA backends (placed last in
+// the dispatch list); use SIMDJSON_FORCE_IMPLEMENTATION=stdsimd to select it.
+#ifndef SIMDJSON_STDSIMD_AVAILABLE
+#if defined(__has_include)
+#if __has_include(<simd>) && (__cplusplus > 202302L)
+#define SIMDJSON_STDSIMD_AVAILABLE 1
+#else
+#define SIMDJSON_STDSIMD_AVAILABLE 0
+#endif
+#else
+#define SIMDJSON_STDSIMD_AVAILABLE 0
+#endif
+#endif
+#ifndef SIMDJSON_IMPLEMENTATION_STDSIMD
+#define SIMDJSON_IMPLEMENTATION_STDSIMD (SIMDJSON_IS_X86_64 && SIMDJSON_STDSIMD_AVAILABLE)
+#endif
+// Always emit the AVX2 target region (do not assume AVX2 is on for the whole TU).
+#define SIMDJSON_CAN_ALWAYS_RUN_STDSIMD 0
 
 // Default Fallback to on unless a builtin implementation has already been selected.
 #ifndef SIMDJSON_IMPLEMENTATION_FALLBACK

@@ -44,6 +44,13 @@ SIMDJSON_PUSH_DISABLE_UNUSED_WARNINGS
 #if SIMDJSON_IMPLEMENTATION_RVV_VLS
 #include <rvv-vls.cpp>
 #endif
+#if SIMDJSON_IMPLEMENTATION_STDSIMD
+// Experimental, C++26-only std::simd backend. The single-header amalgamator is
+// told to not follow this include (see amalgamate.py), so it is copied verbatim
+// into the single header, where SIMDJSON_IMPLEMENTATION_STDSIMD is 0 (it requires
+// C++26) and the block is compiled out.
+#include <stdsimd.cpp>
+#endif
 #if SIMDJSON_IMPLEMENTATION_FALLBACK
 #include <fallback.cpp>
 #endif

@@ -1,3 +1,67 @@
+# `stdstage1` branch — porting simdjson to C++26 `std::simd`
+
+> **This is an experimental fork/branch, not upstream simdjson.** Its purpose is to
+> migrate simdjson's hand-written, per-ISA SIMD kernels toward **portable C++26
+> `std::simd`** (`<simd>`), with the stretch goal of an ISA-independent parser. Work
+> proceeds in small, benchmarked stages: pick one isolated piece of functionality,
+> reimplement it on `std::simd` (reusing the *unchanged* generic algorithms),
+> benchmark against the existing ISA kernels, and document gaps and regressions.
+
+A new coexisting backend, **`stdsimd`**, is registered alongside the native backends
+(haswell, icelake, …) and selectable with `SIMDJSON_FORCE_IMPLEMENTATION=stdsimd`. It
+parses JSON end-to-end on `std::simd` and is exercised by the full test suite.
+
+- **Build/test/run:** WSL `Ubuntu-26.04` with **GCC 16** (`g++-16`), C++26. See `CLAUDE.md`.
+- **Status, plan, baselines, regressions:** see [`docs/stdsimd-migration/`](docs/stdsimd-migration/)
+  (`STATUS.md`, the migration plan, `GAPS.md`, `REGRESSIONS.md`, `BASELINE.md`).
+- **Current result (twitter.json, vs haswell AVX2, `-O2`):** validate_utf8, minify, and
+  full DOM parse are correct (byte-identical output) and **131/131 tests pass**. Portable
+  default is 10–25× slower; with the optional x86 escape hatches it reaches ~1.5× (minify) /
+  2.3× (parse) / 7.3× (utf8). Not at parity — no ISA backend has been retired.
+
+## std::simd functionality gaps (from `docs/stdsimd-migration/GAPS.md`)
+
+Operations simdjson relies on that have no usable portable `std::simd` primitive in the
+**installed GCC 16** (`g++-16`, experimental trunk), the workaround used, and its cost.
+"In C++26?" tracks whether the standard (P1928R15 + P2664R11) specifies it, independent
+of GCC's implementation status.
+
+| Operation (simdjson) | In C++26? | Usable in GCC 16 `<simd>`? | Workaround used | Cost |
+| --- | --- | --- | --- | --- |
+| `lookup_16` (pshufb, runtime byte shuffle) | yes — dynamic `permute(v, idx)` | **no** — `permute(v,idx)` is declared but forwards to `v[idx]`, and the vector-subscript `operator[]` overload is **unimplemented** | generator-lambda scalar gather: `vec([&](int i){ return tbl[v[i] & 0x0F]; })` | **high** — scalar 32-lane loop per lookup; dominant cost of the UTF-8 regression |
+| saturating add/sub (`saturating_sub`, `gt_bits`) | not in C++26 `<simd>`; **P2956** adds `add_sat`/`sub_sat`/`saturate_cast` for `basic_simd` but targets **C++29** | no (not in GCC 16) | emulate: `a - min(a, b)` (sub) | low — 2 ops instead of 1 |
+| `prev<N>` (byte shift across chunk boundary) | expressible via permute/concat | permute unimplemented (see above) | store both chunks to a 64-byte buffer, reload at offset `32-N` | medium — round-trip through memory |
+| `prefix_xor` (carry-less multiply) | **not in `<simd>`** (and it is a scalar `uint64_t` bit-trick, not a vector op) | n/a | portable shift-XOR ladder (arm64 approach) | — |
+| `compress` (vpcompress / compaction) | yes — `compress(mask, v)` (P2664 mask-indexed) | not surfaced in this snapshot | scalar gather, or AVX2 `thintable` escape hatch | **high for minify** (7× lever) |
+
+**`GAP::` code markers.** Source locations that exist only because GCC 16's `<simd>`
+does not yet implement a C++26-specified feature are tagged with a `GAP::` comment.
+Grep for them when revisiting after a GCC upgrade:
+
+```
+grep -rn "GAP::" include/simdjson/stdsimd src
+```
+
+- `include/simdjson/stdsimd/simd.h` — `lookup_16` (generator-gather; waiting on GCC's dynamic `std::simd::permute`)
+- `include/simdjson/stdsimd/simd.h` — `prev<N>` (memory round-trip; same dynamic `permute` gap)
+- `include/simdjson/stdsimd/simd.h` — `saturating_sub` (min-emulation; *future-standard* gap — P2956, C++29)
+
+The `permute` sites are *implementation* gaps (already in C++26; GCC hasn't shipped it);
+`saturating_sub` is a *standard-evolution* gap (arrives in C++29 via P2956).
+
+**Notes.**
+- `mask.to_ullong()` provides the movemask/`to_bitmask` equivalent and works well.
+- Prefer `unchecked_load<V>(ptr, n)` / `unchecked_store(v, ptr, n)` over span/range constructors.
+- The dynamic-`permute` gap is the single biggest performance issue; when GCC implements it,
+  the pshufb/alignr workarounds become portable one-liners.
+- Optional non-portable x86-64 escape hatches (CMake options, default OFF, via `std::bit_cast`
+  to `__m256i`): `SIMDJSON_STDSIMD_NATIVE_PSHUFB` (vpshufb for `lookup_16`),
+  `SIMDJSON_STDSIMD_NATIVE_COMPRESS` (thintable/pshufb for `compress`),
+  `SIMDJSON_STDSIMD_NATIVE_ALIGNR` (alignr for `prev<N>`). Measure only at `-O2`+
+  (std::simd needs inlining; `-Og` numbers are meaningless).
+
+---
+
 [![][license img]][license] [![][licensemit img]][licensemit]
 
 

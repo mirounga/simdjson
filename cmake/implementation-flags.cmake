@@ -1,7 +1,7 @@
 #
 # Implementation selection
 #
-set(SIMDJSON_ALL_IMPLEMENTATIONS fallback westmere haswell icelake arm64 ppc64)
+set(SIMDJSON_ALL_IMPLEMENTATIONS fallback westmere haswell icelake arm64 ppc64 stdsimd)
 
 set(
     SIMDJSON_IMPLEMENTATION ""

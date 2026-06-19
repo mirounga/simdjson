@@ -434,6 +434,13 @@ class SimdjsonRepository:
             return include_path in self.files
 
     def __getitem__(self, include_path: str):
+        # The experimental, C++26-only std::simd backend is excluded from the
+        # single-header distribution. Returning None makes the amalgamator copy
+        # any #include of it verbatim instead of following it; in the generated
+        # header those includes live inside #if SIMDJSON_IMPLEMENTATION_STDSIMD
+        # (which is 0 there) and are compiled out.
+        if 'stdsimd' in include_path:
+            return None
         if include_path not in self.files:
             root = self._included_filename_root(include_path)
             if not root:
@@ -464,6 +471,10 @@ class SimdjsonRepository:
         used_files = set([file.include_path for file in self if file.root == root])
         all_files.difference_update(used_files)
         all_files.difference_update(DEPRECATED_FILES)
+        # The experimental C++26-only std::simd backend is intentionally excluded
+        # from the portable single-header distribution (its includes are copied
+        # verbatim, not followed; see Repository.__getitem__).
+        all_files = set(f for f in all_files if 'stdsimd' not in f)
         if len(all_files) > 0:
             bullet_list = "\n".join(f"        {root}/{f}" for f in sorted(all_files))
             raise AssertionError(
@@ -724,7 +735,9 @@ def validate_implementations():
             item_path = os.path.join(include_simdjson_path, item)
             if os.path.isdir(item_path):
                 impl_h_path = os.path.join(item_path, 'implementation.h')
-                if os.path.exists(impl_h_path) and item != 'builtin':  # Ignore builtin
+                # Ignore builtin, and the experimental C++26-only stdsimd backend
+                # (not part of the portable single-header distribution).
+                if os.path.exists(impl_h_path) and item != 'builtin' and item != 'stdsimd':
                     found_implementations.add(item)
 
     expected_implementations = set(IMPLEMENTATIONS)

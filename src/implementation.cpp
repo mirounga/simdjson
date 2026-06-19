@@ -130,6 +130,18 @@ static const simdjson::rvv_vls::implementation* get_rvv_vls_singleton() {
 } // namespace simdjson
 #endif // SIMDJSON_IMPLEMENTATION_RVV_VLS
 
+#if SIMDJSON_IMPLEMENTATION_STDSIMD
+#include <simdjson/stdsimd/implementation.h>
+namespace simdjson {
+namespace internal {
+static const stdsimd::implementation* get_stdsimd_singleton() {
+  static const stdsimd::implementation stdsimd_singleton{};
+  return &stdsimd_singleton;
+}
+} // namespace internal
+} // namespace simdjson
+#endif // SIMDJSON_IMPLEMENTATION_STDSIMD
+
 #undef SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
@@ -142,7 +154,8 @@ namespace internal {
              + SIMDJSON_IMPLEMENTATION_HASWELL + SIMDJSON_IMPLEMENTATION_WESTMERE \
              + SIMDJSON_IMPLEMENTATION_ARM64 + SIMDJSON_IMPLEMENTATION_PPC64 \
              + SIMDJSON_IMPLEMENTATION_LSX + SIMDJSON_IMPLEMENTATION_LASX \
-             + SIMDJSON_IMPLEMENTATION_RVV_VLS + SIMDJSON_IMPLEMENTATION_FALLBACK == 1)
+             + SIMDJSON_IMPLEMENTATION_RVV_VLS + SIMDJSON_IMPLEMENTATION_STDSIMD \
+             + SIMDJSON_IMPLEMENTATION_FALLBACK == 1)
 
 #if SIMDJSON_SINGLE_IMPLEMENTATION
   simdjson_really_inline static const implementation* get_single_implementation() {
@@ -170,6 +183,9 @@ namespace internal {
 #endif
 #if SIMDJSON_IMPLEMENTATION_RVV_VLS
     get_rvv_vls_singleton();
+#endif
+#if SIMDJSON_IMPLEMENTATION_STDSIMD
+    get_stdsimd_singleton();
 #endif
 #if SIMDJSON_IMPLEMENTATION_FALLBACK
     get_fallback_singleton();
@@ -233,6 +249,9 @@ static const std::initializer_list<const implementation *>& get_available_implem
 #endif
 #if SIMDJSON_IMPLEMENTATION_RVV_VLS
     get_rvv_vls_singleton(),
+#endif
+#if SIMDJSON_IMPLEMENTATION_STDSIMD
+    get_stdsimd_singleton(),
 #endif
 #if SIMDJSON_IMPLEMENTATION_FALLBACK
     get_fallback_singleton(),
