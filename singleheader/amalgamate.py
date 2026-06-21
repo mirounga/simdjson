@@ -133,7 +133,7 @@ else:
 RelativeRoot = str # Literal['src','include'] # Literal not supported in Python 3.7 (CI)
 RELATIVE_ROOTS: List[RelativeRoot] = ['src', 'include' ]
 Implementation = str # Literal['arm64', 'fallback', 'haswell', 'icelake', 'ppc64', 'westmere', 'lsx', 'lasx'] # Literal not supported in Python 3.7 (CI)
-IMPLEMENTATIONS: List[Implementation] = [ 'arm64', 'haswell', 'icelake', 'lasx', 'lsx', 'ppc64', 'rvv-vls', 'westmere', 'fallback' ]
+IMPLEMENTATIONS: List[Implementation] = [ 'arm64', 'sve', 'haswell', 'icelake', 'lasx', 'lsx', 'ppc64', 'rvv-vls', 'westmere', 'fallback' ]
 implementation_re = re.compile(f'(^|/)({"|".join(IMPLEMENTATIONS)})')
 GENERIC_INCLUDE = "simdjson/generic"
 GENERIC_SRC = "generic"
@@ -434,12 +434,16 @@ class SimdjsonRepository:
             return include_path in self.files
 
     def __getitem__(self, include_path: str):
-        # The experimental, C++26-only std::simd backend is excluded from the
-        # single-header distribution. Returning None makes the amalgamator copy
-        # any #include of it verbatim instead of following it; in the generated
-        # header those includes live inside #if SIMDJSON_IMPLEMENTATION_STDSIMD
-        # (which is 0 there) and are compiled out.
-        if 'stdsimd' in include_path:
+        # The shared std::simd kernel (generic/simd_block.h, generic/simd_kernel.h)
+        # and the per-backend gap fills (<isa>/simd_gaps.h) are excluded from the
+        # single-header distribution: they need <simd> (C++26), and they are reached
+        # through the twice-included <isa>/simd.h path (haswell.cpp pulls both
+        # haswell.h and begin.h), which the once-per-impl amalgamator cannot inline.
+        # Returning None copies any #include of them verbatim instead of following it;
+        # in the single header those includes sit inside `#if SIMDJSON_IMPLEMENTATION_<ISA>`
+        # regions, which compile out below C++26 (backends gated on
+        # SIMDJSON_STD_SIMD_AVAILABLE), keeping the single header C++11/14/17-standalone.
+        if 'simd_block' in include_path or 'simd_kernel' in include_path or 'simd_gaps' in include_path:
             return None
         if include_path not in self.files:
             root = self._included_filename_root(include_path)
@@ -471,10 +475,11 @@ class SimdjsonRepository:
         used_files = set([file.include_path for file in self if file.root == root])
         all_files.difference_update(used_files)
         all_files.difference_update(DEPRECATED_FILES)
-        # The experimental C++26-only std::simd backend is intentionally excluded
-        # from the portable single-header distribution (its includes are copied
-        # verbatim, not followed; see Repository.__getitem__).
-        all_files = set(f for f in all_files if 'stdsimd' not in f)
+        # The shared std::simd kernel (generic/simd_block.h, generic/simd_kernel.h) and the
+        # per-backend gap fills (e.g. haswell/simd_gaps.h) are reached only through the
+        # twice-included <isa>/simd.h path and need <simd> (C++26); they are excluded from the
+        # portable single-header distribution (copied verbatim; see __getitem__).
+        all_files = set(f for f in all_files if 'simd_block' not in f and 'simd_kernel' not in f and 'simd_gaps' not in f)
         if len(all_files) > 0:
             bullet_list = "\n".join(f"        {root}/{f}" for f in sorted(all_files))
             raise AssertionError(
@@ -735,9 +740,8 @@ def validate_implementations():
             item_path = os.path.join(include_simdjson_path, item)
             if os.path.isdir(item_path):
                 impl_h_path = os.path.join(item_path, 'implementation.h')
-                # Ignore builtin, and the experimental C++26-only stdsimd backend
-                # (not part of the portable single-header distribution).
-                if os.path.exists(impl_h_path) and item != 'builtin' and item != 'stdsimd':
+                # Ignore builtin (not a real backend dir).
+                if os.path.exists(impl_h_path) and item != 'builtin':
                     found_implementations.add(item)
 
     expected_implementations = set(IMPLEMENTATIONS)

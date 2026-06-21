@@ -37,50 +37,29 @@ namespace {
 
 using namespace simd;
 
-simdjson_inline json_character_block json_character_block::classify(const simd::simd8x64<uint8_t>& in) {
-  const simd8<uint8_t> table1(16, 0, 0, 0, 0, 0, 0, 0, 0, 8, 12, 1, 2, 9, 0, 0);
-  const simd8<uint8_t> table2(8, 0, 18, 4, 0, 1, 0, 1, 0, 0, 0, 3, 2, 1, 0, 0);
-
-  simd8x64<uint8_t> v(
-     (in.chunks[0] & 0xf).lookup_16(table1) & (in.chunks[0].shr<4>()).lookup_16(table2),
-     (in.chunks[1] & 0xf).lookup_16(table1) & (in.chunks[1].shr<4>()).lookup_16(table2),
-     (in.chunks[2] & 0xf).lookup_16(table1) & (in.chunks[2].shr<4>()).lookup_16(table2),
-     (in.chunks[3] & 0xf).lookup_16(table1) & (in.chunks[3].shr<4>()).lookup_16(table2)
-  );
-
-  uint64_t op = simd8x64<bool>(
-        v.chunks[0].any_bits_set(0x7),
-        v.chunks[1].any_bits_set(0x7),
-        v.chunks[2].any_bits_set(0x7),
-        v.chunks[3].any_bits_set(0x7)
-  ).to_bitmask();
-
-  uint64_t whitespace = simd8x64<bool>(
-        v.chunks[0].any_bits_set(0x18),
-        v.chunks[1].any_bits_set(0x18),
-        v.chunks[2].any_bits_set(0x18),
-        v.chunks[3].any_bits_set(0x18)
-  ).to_bitmask();
-
+// Identifies structural characters (comma, colon, braces, brackets) and ASCII
+// whitespace ('\r','\n','\t',' '). Operates on the whole 64-byte block via the
+// kernel's lookup_16 (Altivec vec_perm gap fill, pshufb semantics). The bespoke
+// raw-vec_perm table trick is replaced by the shared classify (byte-identical to the
+// x86 backends). See the haswell backend for the table-design rationale.
+simdjson_inline json_character_block json_character_block::classify(const simd::block& in) {
+  static const uint8_t whitespace_table[16] = {
+    ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100
+  };
+  static const uint8_t op_table[16] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0
+  };
+  const block ws = lookup_16(in, whitespace_table);
+  const uint64_t whitespace = to_bitmask(in == ws);
+  const block opl = lookup_16(in, op_table);
+  const block curl = in | block(uint8_t(0x20));
+  const uint64_t op = to_bitmask(curl == opl);
   return { whitespace, op };
 }
 
-simdjson_inline bool is_ascii(const simd8x64<uint8_t>& input) {
-  // careful: 0x80 is not ascii.
-  return input.reduce_or().saturating_sub(0x7fu).bits_not_set_anywhere();
-}
-
-simdjson_unused simdjson_inline simd8<bool> must_be_continuation(const simd8<uint8_t> prev1, const simd8<uint8_t> prev2, const simd8<uint8_t> prev3) {
-  simd8<uint8_t> is_second_byte = prev1.saturating_sub(0xc0u-1); // Only 11______ will be > 0
-  simd8<uint8_t> is_third_byte  = prev2.saturating_sub(0xe0u-1); // Only 111_____ will be > 0
-  simd8<uint8_t> is_fourth_byte = prev3.saturating_sub(0xf0u-1); // Only 1111____ will be > 0
-  // Caller requires a bool (all 1's). All values resulting from the subtraction will be <= 64, so signed comparison is fine.
-  return simd8<int8_t>(is_second_byte | is_third_byte | is_fourth_byte) > int8_t(0);
-}
-
-simdjson_inline simd8<uint8_t> must_be_2_3_continuation(const simd8<uint8_t> prev2, const simd8<uint8_t> prev3) {
-  simd8<uint8_t> is_third_byte  = prev2.saturating_sub(0xe0u-0x80); // Only 111_____ will be >= 0x80
-  simd8<uint8_t> is_fourth_byte = prev3.saturating_sub(0xf0u-0x80); // Only 1111____ will be >= 0x80
+simdjson_inline simd::block must_be_2_3_continuation(const simd::block prev2, const simd::block prev3) {
+  block is_third_byte  = saturating_sub(prev2, block(uint8_t(0xe0u-0x80))); // Only 111_____ will be >= 0x80
+  block is_fourth_byte = saturating_sub(prev3, block(uint8_t(0xf0u-0x80))); // Only 1111____ will be >= 0x80
   return is_third_byte | is_fourth_byte;
 }
 
@@ -121,8 +100,8 @@ simdjson_warn_unused error_code dom_parser_implementation::stage2_next(dom::docu
 }
 
 SIMDJSON_NO_SANITIZE_MEMORY
-simdjson_warn_unused uint8_t *dom_parser_implementation::parse_string(const uint8_t *src, uint8_t *dst, bool replacement_char) const noexcept {
-  return ppc64::stringparsing::parse_string(src, dst, replacement_char);
+simdjson_warn_unused uint8_t *dom_parser_implementation::parse_string(const uint8_t *src, uint8_t *dst, bool allow_replacement) const noexcept {
+  return ppc64::stringparsing::parse_string(src, dst, allow_replacement);
 }
 
 simdjson_warn_unused uint8_t *dom_parser_implementation::parse_wobbly_string(const uint8_t *src, uint8_t *dst) const noexcept {

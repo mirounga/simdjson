@@ -11,8 +11,9 @@ namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
 namespace {
 
-simdjson_inline simd8<uint8_t> must_be_2_3_continuation(const simd8<uint8_t> prev2, const simd8<uint8_t> prev3);
-simdjson_inline bool is_ascii(const simd8x64<uint8_t>& input);
+// The UTF-8 multibyte-continuation helper is provided per-backend (e.g. haswell.cpp,
+// westmere.cpp, icelake.cpp). is_ascii(block) comes from the shared kernel.
+simdjson_inline simd::block must_be_2_3_continuation(const simd::block prev2, const simd::block prev3);
 
 } // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION

@@ -1,8 +1,8 @@
 #ifndef SIMDJSON_CONDITIONAL_INCLUDE
-#include "simdjson/stdsimd/base.h"
+#include "simdjson/sve/base.h"
 #endif // SIMDJSON_CONDITIONAL_INCLUDE
 
-#if !SIMDJSON_CAN_ALWAYS_RUN_STDSIMD
+#if !SIMDJSON_CAN_ALWAYS_RUN_SVE
 SIMDJSON_UNTARGET_REGION
 #endif
 

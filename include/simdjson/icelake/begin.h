@@ -1,4 +1,8 @@
 #define SIMDJSON_IMPLEMENTATION icelake
+
+// Icelake rides the shared std::simd kernel: the 64-byte block is a single AVX-512
+// register, with AVX-512 native gap fills; see icelake/simd.h.
+
 #include "simdjson/icelake/base.h"
 #include "simdjson/icelake/intrinsics.h"
 

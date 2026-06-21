@@ -2,9 +2,7 @@
 #include "simdjson/lasx/base.h"
 #endif // SIMDJSON_CONDITIONAL_INCLUDE
 
-#undef SIMDJSON_SKIP_BACKSLASH_SHORT_CIRCUIT
 #undef SIMDJSON_IMPLEMENTATION
-
 
 #if SIMDJSON_CAN_ALWAYS_RUN_LASX
 // nothing needed.

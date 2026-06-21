@@ -6,5 +6,3 @@
 #include "simdjson/arm64/numberparsing_defs.h"
 #include "simdjson/arm64/simd.h"
 #include "simdjson/arm64/stringparsing_defs.h"
-
-#define SIMDJSON_SKIP_BACKSLASH_SHORT_CIRCUIT 1

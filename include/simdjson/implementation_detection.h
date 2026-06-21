@@ -14,7 +14,7 @@
 #define SIMDJSON_IMPLEMENTATION_ID_lasx 8
 //#define SIMDJSON_IMPLEMENTATION_ID_rvv 9
 #define SIMDJSON_IMPLEMENTATION_ID_rvv_vls 10
-#define SIMDJSON_IMPLEMENTATION_ID_stdsimd 11
+#define SIMDJSON_IMPLEMENTATION_ID_sve 11
 
 #define SIMDJSON_IMPLEMENTATION_ID_FOR(IMPL) SIMDJSON_CAT(SIMDJSON_IMPLEMENTATION_ID_, IMPL)
 #define SIMDJSON_IMPLEMENTATION_ID SIMDJSON_IMPLEMENTATION_ID_FOR(SIMDJSON_IMPLEMENTATION)
@@ -26,8 +26,21 @@
 // in which we include them.
 //
 
+// The x86 SIMD backends (westmere/haswell/icelake) ride the shared std::simd kernel, which
+// needs the C++26 <simd> header. When the TU is compiled below C++26 (e.g. the C++11/14/17
+// single-header / quickstart acceptance builds, or any non-C++26 consumer), those backends are
+// disabled and the scalar `fallback` takes over. The compiled library is always built at C++26,
+// so it still carries all three for runtime dispatch.
+#ifndef SIMDJSON_STD_SIMD_AVAILABLE
+#if defined(__has_include) && __has_include(<simd>) && (__cplusplus > 202302L)
+#define SIMDJSON_STD_SIMD_AVAILABLE 1
+#else
+#define SIMDJSON_STD_SIMD_AVAILABLE 0
+#endif
+#endif
+
 #ifndef SIMDJSON_IMPLEMENTATION_ARM64
-#define SIMDJSON_IMPLEMENTATION_ARM64 (SIMDJSON_IS_ARM64)
+#define SIMDJSON_IMPLEMENTATION_ARM64 (SIMDJSON_IS_ARM64 && SIMDJSON_STD_SIMD_AVAILABLE)
 #endif
 #if SIMDJSON_IMPLEMENTATION_ARM64 && SIMDJSON_IS_ARM64
 #define SIMDJSON_CAN_ALWAYS_RUN_ARM64 1
@@ -35,10 +48,26 @@
 #define SIMDJSON_CAN_ALWAYS_RUN_ARM64 0
 #endif
 
+// ARM SVE2 (experimental). Rides the std::simd kernel (SVE bulk ops, NEON gap fills); needs
+// C++26 std::simd and a fixed SVE width (-msve-vector-bits). Auto-enabled only when the compile
+// target actually has SVE2 (__ARM_FEATURE_SVE2); otherwise arm64/NEON or fallback is used.
+#ifndef SIMDJSON_IMPLEMENTATION_SVE
+#if defined(__ARM_FEATURE_SVE2)
+#define SIMDJSON_IMPLEMENTATION_SVE (SIMDJSON_IS_ARM64 && SIMDJSON_STD_SIMD_AVAILABLE)
+#else
+#define SIMDJSON_IMPLEMENTATION_SVE 0
+#endif
+#endif
+#if SIMDJSON_IMPLEMENTATION_SVE && defined(__ARM_FEATURE_SVE2)
+#define SIMDJSON_CAN_ALWAYS_RUN_SVE 1
+#else
+#define SIMDJSON_CAN_ALWAYS_RUN_SVE 0
+#endif
+
 // Default Icelake to on if this is x86-64. Even if we're not compiled for it, it could be selected
 // at runtime.
 #ifndef SIMDJSON_IMPLEMENTATION_ICELAKE
-#define SIMDJSON_IMPLEMENTATION_ICELAKE ((SIMDJSON_IS_X86_64) && (SIMDJSON_AVX512_ALLOWED) && (SIMDJSON_COMPILER_SUPPORTS_VBMI2))
+#define SIMDJSON_IMPLEMENTATION_ICELAKE ((SIMDJSON_IS_X86_64) && (SIMDJSON_STD_SIMD_AVAILABLE) && (SIMDJSON_AVX512_ALLOWED) && (SIMDJSON_COMPILER_SUPPORTS_VBMI2))
 #endif
 
 #ifdef _MSC_VER
@@ -67,7 +96,7 @@
 // if icelake is always available, never enable haswell.
 #define SIMDJSON_IMPLEMENTATION_HASWELL 0
 #else
-#define SIMDJSON_IMPLEMENTATION_HASWELL SIMDJSON_IS_X86_64
+#define SIMDJSON_IMPLEMENTATION_HASWELL (SIMDJSON_IS_X86_64 && SIMDJSON_STD_SIMD_AVAILABLE)
 #endif
 #endif
 #ifdef _MSC_VER
@@ -95,7 +124,7 @@
 // if icelake or haswell are always available, never enable westmere.
 #define SIMDJSON_IMPLEMENTATION_WESTMERE 0
 #else
-#define SIMDJSON_IMPLEMENTATION_WESTMERE SIMDJSON_IS_X86_64
+#define SIMDJSON_IMPLEMENTATION_WESTMERE (SIMDJSON_IS_X86_64 && SIMDJSON_STD_SIMD_AVAILABLE)
 #endif
 #endif
 
@@ -107,7 +136,7 @@
 
 
 #ifndef SIMDJSON_IMPLEMENTATION_PPC64
-#define SIMDJSON_IMPLEMENTATION_PPC64 (SIMDJSON_IS_PPC64 && SIMDJSON_IS_PPC64_VMX)
+#define SIMDJSON_IMPLEMENTATION_PPC64 (SIMDJSON_IS_PPC64 && SIMDJSON_IS_PPC64_VMX && SIMDJSON_STD_SIMD_AVAILABLE)
 #endif
 #if SIMDJSON_IMPLEMENTATION_PPC64 && SIMDJSON_IS_PPC64 && SIMDJSON_IS_PPC64_VMX
 #define SIMDJSON_CAN_ALWAYS_RUN_PPC64 1
@@ -116,50 +145,27 @@
 #endif
 
 #ifndef SIMDJSON_IMPLEMENTATION_LASX
-#define SIMDJSON_IMPLEMENTATION_LASX (SIMDJSON_IS_LSX)
+#define SIMDJSON_IMPLEMENTATION_LASX (SIMDJSON_IS_LSX && SIMDJSON_STD_SIMD_AVAILABLE)
 #endif
-#define SIMDJSON_CAN_ALWAYS_RUN_LASX (SIMDJSON_IS_LASX)
+#define SIMDJSON_CAN_ALWAYS_RUN_LASX (SIMDJSON_IS_LASX && SIMDJSON_STD_SIMD_AVAILABLE)
 
 #ifndef SIMDJSON_IMPLEMENTATION_LSX
 #if SIMDJSON_CAN_ALWAYS_RUN_LASX
 #define SIMDJSON_IMPLEMENTATION_LSX 0
 #else
-#define SIMDJSON_IMPLEMENTATION_LSX (SIMDJSON_IS_LSX)
+#define SIMDJSON_IMPLEMENTATION_LSX (SIMDJSON_IS_LSX && SIMDJSON_STD_SIMD_AVAILABLE)
 #endif
 #endif
 #define SIMDJSON_CAN_ALWAYS_RUN_LSX (SIMDJSON_IMPLEMENTATION_LSX)
 
-#define SIMDJSON_CAN_ALWAYS_RUN_RVV_VLS SIMDJSON_IS_RVV_VLS
+#define SIMDJSON_CAN_ALWAYS_RUN_RVV_VLS (SIMDJSON_IS_RVV_VLS && SIMDJSON_STD_SIMD_AVAILABLE)
 #ifndef SIMDJSON_IMPLEMENTATION_RVV_VLS
 #define SIMDJSON_IMPLEMENTATION_RVV_VLS SIMDJSON_CAN_ALWAYS_RUN_RVV_VLS
 #endif
 
-// Portable std::simd backend. Available on x86-64 ONLY when the C++26 <simd>
-// header is usable (i.e. the TU is compiled as C++26 with GCC's std::simd). This
-// gate is essential: simdjson is frequently compiled at C++11/14/17 (e.g. the
-// quickstart/singleheader acceptance tests), and <simd>/std::simd does not exist
-// there. It is never auto-selected over the native ISA backends (placed last in
-// the dispatch list); use SIMDJSON_FORCE_IMPLEMENTATION=stdsimd to select it.
-#ifndef SIMDJSON_STDSIMD_AVAILABLE
-#if defined(__has_include)
-#if __has_include(<simd>) && (__cplusplus > 202302L)
-#define SIMDJSON_STDSIMD_AVAILABLE 1
-#else
-#define SIMDJSON_STDSIMD_AVAILABLE 0
-#endif
-#else
-#define SIMDJSON_STDSIMD_AVAILABLE 0
-#endif
-#endif
-#ifndef SIMDJSON_IMPLEMENTATION_STDSIMD
-#define SIMDJSON_IMPLEMENTATION_STDSIMD (SIMDJSON_IS_X86_64 && SIMDJSON_STDSIMD_AVAILABLE)
-#endif
-// Always emit the AVX2 target region (do not assume AVX2 is on for the whole TU).
-#define SIMDJSON_CAN_ALWAYS_RUN_STDSIMD 0
-
 // Default Fallback to on unless a builtin implementation has already been selected.
 #ifndef SIMDJSON_IMPLEMENTATION_FALLBACK
-#if SIMDJSON_CAN_ALWAYS_RUN_ARM64 || SIMDJSON_CAN_ALWAYS_RUN_ICELAKE || SIMDJSON_CAN_ALWAYS_RUN_HASWELL || SIMDJSON_CAN_ALWAYS_RUN_WESTMERE || SIMDJSON_CAN_ALWAYS_RUN_PPC64 || SIMDJSON_CAN_ALWAYS_RUN_LSX || SIMDJSON_CAN_ALWAYS_RUN_LASX || SIMDJSON_CAN_ALWAYS_RUN_RVV_VLS
+#if SIMDJSON_CAN_ALWAYS_RUN_ARM64 || SIMDJSON_CAN_ALWAYS_RUN_SVE || SIMDJSON_CAN_ALWAYS_RUN_ICELAKE || SIMDJSON_CAN_ALWAYS_RUN_HASWELL || SIMDJSON_CAN_ALWAYS_RUN_WESTMERE || SIMDJSON_CAN_ALWAYS_RUN_PPC64 || SIMDJSON_CAN_ALWAYS_RUN_LSX || SIMDJSON_CAN_ALWAYS_RUN_LASX || SIMDJSON_CAN_ALWAYS_RUN_RVV_VLS
 // if anything at all except fallback can always run, then disable fallback.
 #define SIMDJSON_IMPLEMENTATION_FALLBACK 0
 #else
@@ -177,6 +183,8 @@
 #define SIMDJSON_BUILTIN_IMPLEMENTATION haswell
 #elif SIMDJSON_CAN_ALWAYS_RUN_WESTMERE
 #define SIMDJSON_BUILTIN_IMPLEMENTATION westmere
+#elif SIMDJSON_CAN_ALWAYS_RUN_SVE
+#define SIMDJSON_BUILTIN_IMPLEMENTATION sve
 #elif SIMDJSON_CAN_ALWAYS_RUN_ARM64
 #define SIMDJSON_BUILTIN_IMPLEMENTATION arm64
 #elif SIMDJSON_CAN_ALWAYS_RUN_PPC64

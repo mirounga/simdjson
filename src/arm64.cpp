@@ -37,69 +37,30 @@ namespace {
 
 using namespace simd;
 
-simdjson_inline json_character_block json_character_block::classify(const simd::simd8x64<uint8_t>& in) {
-  const uint8x16_t op_table = simd8<uint8_t>(
-    0xff, 0, ',', ':', 0, '[', ']', '{', '}', 0, 0, 0, 0, 0, 0, 0
-  );
-  const uint8x16_t ws_table = simd8<uint8_t>(
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0xff, 0xff, 0, 0, 0xff, 0, 0
-  );
-
-  const uint8x16_t d0_0 = in.chunks[0];
-  const uint8x16_t d0_1 = in.chunks[1];
-  const uint8x16_t d0_2 = in.chunks[2];
-  const uint8x16_t d0_3 = in.chunks[3];
-
-  const uint8x16_t match_op_0 = vceqq_u8(vqtbl1q_u8(op_table, vshrq_n_u8(vaddq_u8(d0_0, vdupq_n_u8(3)), 4)), d0_0);
-  const uint8x16_t match_op_1 = vceqq_u8(vqtbl1q_u8(op_table, vshrq_n_u8(vaddq_u8(d0_1, vdupq_n_u8(3)), 4)), d0_1);
-  const uint8x16_t match_op_2 = vceqq_u8(vqtbl1q_u8(op_table, vshrq_n_u8(vaddq_u8(d0_2, vdupq_n_u8(3)), 4)), d0_2);
-  const uint8x16_t match_op_3 = vceqq_u8(vqtbl1q_u8(op_table, vshrq_n_u8(vaddq_u8(d0_3, vdupq_n_u8(3)), 4)), d0_3);
-
-  const uint8x16_t match_ws_0 = vqtbx1q_u8(vceqq_u8(d0_0, vdupq_n_u8(' ')), ws_table, d0_0);
-  const uint8x16_t match_ws_1 = vqtbx1q_u8(vceqq_u8(d0_1, vdupq_n_u8(' ')), ws_table, d0_1);
-  const uint8x16_t match_ws_2 = vqtbx1q_u8(vceqq_u8(d0_2, vdupq_n_u8(' ')), ws_table, d0_2);
-  const uint8x16_t match_ws_3 = vqtbx1q_u8(vceqq_u8(d0_3, vdupq_n_u8(' ')), ws_table, d0_3);
-
-  const uint8x16_t bit_mask = simd8<uint8_t>(
-    0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80,
-    0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80
-  );
-
-  uint8x16_t op_sum0 = vpaddq_u8(vandq_u8(match_op_0, bit_mask), vandq_u8(match_op_1, bit_mask));
-  uint8x16_t ws_sum0 = vpaddq_u8(vandq_u8(match_ws_0, bit_mask), vandq_u8(match_ws_1, bit_mask));
-  uint8x16_t op_sum1 = vpaddq_u8(vandq_u8(match_op_2, bit_mask), vandq_u8(match_op_3, bit_mask));
-  uint8x16_t ws_sum1 = vpaddq_u8(vandq_u8(match_ws_2, bit_mask), vandq_u8(match_ws_3, bit_mask));
-  op_sum0 = vpaddq_u8(op_sum0, op_sum1);
-  ws_sum0 = vpaddq_u8(ws_sum0, ws_sum1);
-  op_sum0 = vpaddq_u8(op_sum0, op_sum0);
-  ws_sum0 = vpaddq_u8(ws_sum0, ws_sum0);
-  const uint64_t op = vgetq_lane_u64(vreinterpretq_u64_u8(op_sum0), 0);
-  const uint64_t whitespace = vgetq_lane_u64(vreinterpretq_u64_u8(ws_sum0), 0);
-
+// Identifies structural characters (comma, colon, braces, brackets) and ASCII
+// whitespace ('\r','\n','\t',' '). Operates on the whole 64-byte block via the
+// kernel's lookup_16 (NEON vqtbl1q gap fill, pshufb semantics). The bespoke
+// raw-vqtbl1q table trick is replaced by the shared classify (byte-identical to the
+// x86 backends). See the haswell backend for the table-design rationale.
+simdjson_inline json_character_block json_character_block::classify(const simd::block& in) {
+  static const uint8_t whitespace_table[16] = {
+    ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100
+  };
+  static const uint8_t op_table[16] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0
+  };
+  const block ws = lookup_16(in, whitespace_table);
+  const uint64_t whitespace = to_bitmask(in == ws);
+  const block opl = lookup_16(in, op_table);
+  const block curl = in | block(uint8_t(0x20));
+  const uint64_t op = to_bitmask(curl == opl);
   return { whitespace, op };
 }
 
-simdjson_inline bool is_ascii(const simd8x64<uint8_t>& input) {
-    simd8<uint8_t> bits = input.reduce_or();
-    return bits.max_val() < 0x80u;
-}
-
-simdjson_unused simdjson_inline simd8<bool> must_be_continuation(const simd8<uint8_t> prev1, const simd8<uint8_t> prev2, const simd8<uint8_t> prev3) {
-    simd8<bool> is_second_byte = prev1 >= uint8_t(0xc0u);
-    simd8<bool> is_third_byte  = prev2 >= uint8_t(0xe0u);
-    simd8<bool> is_fourth_byte = prev3 >= uint8_t(0xf0u);
-    // Use ^ instead of | for is_*_byte, because ^ is commutative, and the caller is using ^ as well.
-    // This will work fine because we only have to report errors for cases with 0-1 lead bytes.
-    // Multiple lead bytes implies 2 overlapping multibyte characters, and if that happens, there is
-    // guaranteed to be at least *one* lead byte that is part of only 1 other multibyte character.
-    // The error will be detected there.
-    return is_second_byte ^ is_third_byte ^ is_fourth_byte;
-}
-
-simdjson_inline simd8<uint8_t> must_be_2_3_continuation(const simd8<uint8_t> prev2, const simd8<uint8_t> prev3) {
-    simd8<uint8_t> is_third_byte  = prev2.saturating_sub(0xe0u-0x80); // Only 111_____ will be >= 0x80
-    simd8<uint8_t> is_fourth_byte = prev3.saturating_sub(0xf0u-0x80); // Only 1111____ will be >= 0x80
-    return is_third_byte | is_fourth_byte;
+simdjson_inline simd::block must_be_2_3_continuation(const simd::block prev2, const simd::block prev3) {
+  block is_third_byte  = saturating_sub(prev2, block(uint8_t(0xe0u-0x80))); // Only 111_____ will be >= 0x80
+  block is_fourth_byte = saturating_sub(prev3, block(uint8_t(0xf0u-0x80))); // Only 1111____ will be >= 0x80
+  return is_third_byte | is_fourth_byte;
 }
 
 } // unnamed namespace

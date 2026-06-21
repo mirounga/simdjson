@@ -8,12 +8,16 @@
 #endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
-namespace haswell {
+namespace SIMDJSON_IMPLEMENTATION {
 namespace {
 
 using namespace simd;
+namespace dp = std::simd;
 
-// Holds backslashes and quotes locations.
+// The string-parsing scan processes 32 bytes at a time with a std::simd vector
+// (a half-block); no simd8 wrapper. Uses the kernel's free functions.
+using sp_vec = dp::vec<uint8_t, 32>;
+
 struct backslash_and_quote {
 public:
   static constexpr uint32_t BYTES_PROCESSED = 32;
@@ -29,18 +33,14 @@ public:
 }; // struct backslash_and_quote
 
 simdjson_inline backslash_and_quote backslash_and_quote::copy_and_find(const uint8_t *src, uint8_t *dst) {
-  // this can read up to 15 bytes beyond the buffer size, but we require
-  // SIMDJSON_PADDING of padding
   static_assert(SIMDJSON_PADDING >= (BYTES_PROCESSED - 1), "backslash and quote finder must process fewer than SIMDJSON_PADDING bytes");
-  simd8<uint8_t> v(src);
-  // store to dest unconditionally - we can overwrite the bits we don't like later
-  v.store(dst);
+  sp_vec v = dp::unchecked_load<sp_vec>(src, 32);
+  dp::unchecked_store(v, dst, 32);
   return {
-      static_cast<uint32_t>((v == '\\').to_bitmask()),     // bs_bits
-      static_cast<uint32_t>((v == '"').to_bitmask()), // quote_bits
+      uint32_t(to_bitmask(v == sp_vec(uint8_t('\\')))), // bs_bits
+      uint32_t(to_bitmask(v == sp_vec(uint8_t('"')))),  // quote_bits
   };
 }
-
 
 struct escaping {
   static constexpr uint32_t BYTES_PROCESSED = 32;
@@ -52,22 +52,18 @@ struct escaping {
   uint64_t escape_bits;
 }; // struct escaping
 
-
-
 simdjson_inline escaping escaping::copy_and_find(const uint8_t *src, uint8_t *dst) {
   static_assert(SIMDJSON_PADDING >= (BYTES_PROCESSED - 1), "escaping finder must process fewer than SIMDJSON_PADDING bytes");
-  simd8<uint8_t> v(src);
-  v.store(dst);
-  simd8<bool> is_quote = (v == '"');
-  simd8<bool> is_backslash = (v == '\\');
-  simd8<bool> is_control = (v < 32);
-  return {
-    uint64_t((is_backslash | is_quote | is_control).to_bitmask())
-  };
+  sp_vec v = dp::unchecked_load<sp_vec>(src, 32);
+  dp::unchecked_store(v, dst, 32);
+  auto is_quote = (v == sp_vec(uint8_t('"')));
+  auto is_backslash = (v == sp_vec(uint8_t('\\')));
+  auto is_control = (v < sp_vec(uint8_t(32)));
+  return { to_bitmask(is_backslash | is_quote | is_control) };
 }
 
 } // unnamed namespace
-} // namespace haswell
+} // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 
 #endif // SIMDJSON_HASWELL_STRINGPARSING_DEFS_H

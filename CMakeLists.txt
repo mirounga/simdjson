@@ -130,31 +130,16 @@ add_library(simdjson ${SIMDJSON_SOURCES})
 add_library(simdjson::simdjson ALIAS simdjson)
 set(SIMDJSON_LIBRARIES simdjson)
 
-# The portable std::simd (stdsimd) backend uses the C++26 <simd> header. The
-# whole library is a single translation unit (src/simdjson.cpp), so compile the
-# library target(s) as C++26. PRIVATE: this does not propagate to consumers.
+# The x86 SIMD backends (westmere/haswell/icelake) ride the shared std::simd
+# kernel, which uses the C++26 <simd> header. The whole library is a single
+# translation unit (src/simdjson.cpp), so compile the library target(s) as C++26.
+# PRIVATE: this does not propagate to consumers.
 target_compile_features(simdjson PRIVATE cxx_std_26)
 
-# Optional, non-portable performance escape hatches for the stdsimd backend
-# (x86-64 only). They recover most of the perf lost to GCC's unimplemented
-# std::simd dynamic permute / missing compress, at the cost of ISA-independence.
-# OFF by default to keep the backend portable. See docs/stdsimd-migration/.
-option(SIMDJSON_STDSIMD_NATIVE_PSHUFB  "stdsimd: native AVX2 vpshufb for lookup_16 (x86-64)" OFF)
-option(SIMDJSON_STDSIMD_NATIVE_COMPRESS "stdsimd: native AVX2 compaction for compress (x86-64)" OFF)
-option(SIMDJSON_STDSIMD_NATIVE_ALIGNR  "stdsimd: native AVX2 alignr for prev<N> (x86-64)" OFF)
-set(SIMDJSON_STDSIMD_DEFS "")
-if(SIMDJSON_STDSIMD_NATIVE_PSHUFB)
-  list(APPEND SIMDJSON_STDSIMD_DEFS SIMDJSON_STDSIMD_NATIVE_PSHUFB=1)
-endif()
-if(SIMDJSON_STDSIMD_NATIVE_COMPRESS)
-  list(APPEND SIMDJSON_STDSIMD_DEFS SIMDJSON_STDSIMD_NATIVE_COMPRESS=1)
-endif()
-if(SIMDJSON_STDSIMD_NATIVE_ALIGNR)
-  list(APPEND SIMDJSON_STDSIMD_DEFS SIMDJSON_STDSIMD_NATIVE_ALIGNR=1)
-endif()
-if(SIMDJSON_STDSIMD_DEFS)
-  target_compile_definitions(simdjson PRIVATE ${SIMDJSON_STDSIMD_DEFS})
-endif()
+# Each x86 backend's simd.h includes the shared block type
+# (simdjson/generic/simd_block.h), its own native gap fills
+# (simdjson/<isa>/simd_gaps.h: lookup_16/prev/compress), then the kernel ops
+# (simdjson/generic/simd_kernel.h).
 
 # Check for <bit> header compatibility
 include(CheckIncludeFileCXX)
@@ -191,9 +176,6 @@ if(SIMDJSON_BUILD_STATIC_LIB)
   add_library(simdjson::simdjson_static ALIAS simdjson_static)
   list(APPEND SIMDJSON_LIBRARIES simdjson_static)
   target_compile_features(simdjson_static PRIVATE cxx_std_26)
-  if(SIMDJSON_STDSIMD_DEFS)
-    target_compile_definitions(simdjson_static PRIVATE ${SIMDJSON_STDSIMD_DEFS})
-  endif()
 
   # Reuse precompiled headers for static library
   if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.16")

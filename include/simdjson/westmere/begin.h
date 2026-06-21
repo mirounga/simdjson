@@ -1,4 +1,8 @@
 #define SIMDJSON_IMPLEMENTATION westmere
+
+// Westmere rides the shared std::simd kernel: the 64-byte block splits into 4x SSE
+// registers, with SSE native gap fills; see westmere/simd.h.
+
 #include "simdjson/westmere/base.h"
 #include "simdjson/westmere/intrinsics.h"
 

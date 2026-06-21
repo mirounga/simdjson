@@ -9,7 +9,6 @@
 #include <simdjson/rvv-vls/implementation.h>
 
 #include <simdjson/rvv-vls/begin.h>
-#include <simdjson/rvv-vls/simd.h>
 #include <generic/amalgamated.h>
 #include <generic/stage1/amalgamated.h>
 #include <generic/stage2/amalgamated.h>
@@ -38,39 +37,30 @@ namespace {
 
 using namespace simd;
 
-simdjson_inline json_character_block json_character_block::classify(const simd::simd8x64<uint8_t>& in) {
-  static const uint8_t wsTable[16] = { ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100 };
-  static const uint8_t opTable[16] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0 };
-  vuint8_t vws = __riscv_vle8_v_u8m1(wsTable, 16);
-  vuint8_t vop = __riscv_vle8_v_u8m1(opTable, 16);
-  vuint8x64_t lo = __riscv_vand(in, 15, 64);
-  vuint8x64_t curl = __riscv_vor(in, 0x20, 64);
-
-#if __riscv_v_fixed_vlen == 128
-  vboolx64_t mws = __riscv_vmseq(simdutf_vrgather_u8m1x4(vws, lo), in, 64);
-  vboolx64_t mop = __riscv_vmseq(simdutf_vrgather_u8m1x4(vop, lo), curl, 64);
-#elif __riscv_v_fixed_vlen == 256
-  vboolx64_t mws = __riscv_vmseq(simdutf_vrgather_u8m1x2(vws, lo), in, 64);
-  vboolx64_t mop = __riscv_vmseq(simdutf_vrgather_u8m1x2(vop, lo), curl, 64);
-#else
-  vboolx64_t mws = __riscv_vmseq(__riscv_vrgather(vws, lo, 64), in, 64);
-  vboolx64_t mop = __riscv_vmseq(__riscv_vrgather(vop, lo, 64), curl, 64);
-#endif
-
-  return {
-      __riscv_vmv_x(__riscv_vreinterpret_u64m1(mws)),
-      __riscv_vmv_x(__riscv_vreinterpret_u64m1(mop))
+// Identifies structural characters (comma, colon, braces, brackets) and ASCII
+// whitespace ('\r','\n','\t',' '). Operates on the whole 64-byte block via the
+// kernel's lookup_16 (RVV vrgather gap fill, pshufb semantics). The bespoke
+// raw-vrgather table trick is replaced by the shared classify (byte-identical to
+// the x86/arm64 backends). See the haswell backend for the table-design rationale.
+simdjson_inline json_character_block json_character_block::classify(const simd::block& in) {
+  static const uint8_t whitespace_table[16] = {
+    ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100
   };
+  static const uint8_t op_table[16] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0
+  };
+  const block ws = lookup_16(in, whitespace_table);
+  const uint64_t whitespace = to_bitmask(in == ws);
+  const block opl = lookup_16(in, op_table);
+  const block curl = in | block(uint8_t(0x20));
+  const uint64_t op = to_bitmask(curl == opl);
+  return { whitespace, op };
 }
 
-simdjson_inline bool is_ascii(const simd8x64<uint8_t>& input) {
-  return input.is_ascii();
-}
-
-simdjson_inline simd8<uint8_t> must_be_2_3_continuation(const simd8<uint8_t> prev2, const simd8<uint8_t> prev3) {
-    simd8<uint8_t> is_third_byte  = prev2.saturating_sub(0xe0u-0x80); // Only 111_____ will be >= 0x80
-    simd8<uint8_t> is_fourth_byte = prev3.saturating_sub(0xf0u-0x80); // Only 1111____ will be >= 0x80
-    return is_third_byte | is_fourth_byte;
+simdjson_inline simd::block must_be_2_3_continuation(const simd::block prev2, const simd::block prev3) {
+  block is_third_byte  = saturating_sub(prev2, block(uint8_t(0xe0u-0x80))); // Only 111_____ will be >= 0x80
+  block is_fourth_byte = saturating_sub(prev3, block(uint8_t(0xf0u-0x80))); // Only 1111____ will be >= 0x80
+  return is_third_byte | is_fourth_byte;
 }
 
 } // unnamed namespace

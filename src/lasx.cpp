@@ -37,41 +37,30 @@ namespace {
 
 using namespace simd;
 
-simdjson_inline json_character_block json_character_block::classify(const simd::simd8x64<uint8_t>& in) {
-  // Inspired by haswell.
-  // LASX use low 5 bits as index. For the 6 operators (:,[]{}), the unique-5bits is [6:2].
-  // The ASCII white-space and operators have these values: (char, hex, unique-5bits)
-  // (' ', 20, 00000) ('\t', 09, 01001) ('\n', 0A, 01010) ('\r', 0D, 01101)
-  // (',', 2C, 01011) (':', 3A, 01110) ('[', 5B, 10110) ('{', 7B, 11110) (']', 5D, 10111) ('}', 7D, 11111)
-  const simd8<uint8_t> ws_table = simd8<uint8_t>::repeat_16(
-    ' ', 0, 0, 0, 0, 0, 0, 0, 0, '\t', '\n', 0, 0, '\r', 0, 0
-  );
-  const simd8<uint8_t> op_table_lo = simd8<uint8_t>::repeat_16(
-    1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ',', 0, 0, ':', 0
-  );
-  const simd8<uint8_t> op_table_hi = simd8<uint8_t>::repeat_16(
-    0, 0, 0, 0, 0, 0, '[', ']', 0, 0, 0, 0, 0, 0, '{', '}'
-  );
-  uint64_t ws = in.eq({
-    in.chunks[0].lookup_16(ws_table),
-    in.chunks[1].lookup_16(ws_table),
-  });
-  uint64_t op = in.eq({
-    __lasx_xvshuf_b(op_table_hi, op_table_lo, in.chunks[0].shr<2>()),
-    __lasx_xvshuf_b(op_table_hi, op_table_lo, in.chunks[1].shr<2>()),
-  });
-
-  return { ws, op };
+// Identifies structural characters (comma, colon, braces, brackets) and ASCII
+// whitespace ('\r','\n','\t',' '). Operates on the whole 64-byte block via the
+// kernel's lookup_16 (LASX native gap fill, pshufb semantics). The bespoke
+// raw-xvshuf_b table trick is replaced by the shared classify (byte-identical to
+// the x86 backends). See the haswell backend for the table-design rationale.
+simdjson_inline json_character_block json_character_block::classify(const simd::block& in) {
+  static const uint8_t whitespace_table[16] = {
+    ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100
+  };
+  static const uint8_t op_table[16] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0
+  };
+  const block ws = lookup_16(in, whitespace_table);
+  const uint64_t whitespace = to_bitmask(in == ws);
+  const block opl = lookup_16(in, op_table);
+  const block curl = in | block(uint8_t(0x20));
+  const uint64_t op = to_bitmask(curl == opl);
+  return { whitespace, op };
 }
 
-simdjson_inline bool is_ascii(const simd8x64<uint8_t>& input) {
-  return input.reduce_or().is_ascii();
-}
-
-simdjson_inline simd8<uint8_t> must_be_2_3_continuation(const simd8<uint8_t> prev2, const simd8<uint8_t> prev3) {
-    simd8<uint8_t> is_third_byte  = prev2.saturating_sub(0xe0u-0x80); // Only 111_____ will be >= 0x80
-    simd8<uint8_t> is_fourth_byte = prev3.saturating_sub(0xf0u-0x80); // Only 1111____ will be >= 0x80
-    return is_third_byte | is_fourth_byte;
+simdjson_inline simd::block must_be_2_3_continuation(const simd::block prev2, const simd::block prev3) {
+  block is_third_byte  = saturating_sub(prev2, block(uint8_t(0xe0u-0x80))); // Only 111_____ will be >= 0x80
+  block is_fourth_byte = saturating_sub(prev3, block(uint8_t(0xf0u-0x80))); // Only 1111____ will be >= 0x80
+  return is_third_byte | is_fourth_byte;
 }
 
 } // unnamed namespace

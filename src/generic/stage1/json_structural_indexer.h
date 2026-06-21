@@ -139,8 +139,8 @@ public:
 private:
   simdjson_inline json_structural_indexer(uint32_t *structural_indexes);
   template<size_t STEP_SIZE>
-  simdjson_inline void step(const uint8_t *block, buf_block_reader<STEP_SIZE> &reader) noexcept;
-  simdjson_inline void next(const simd::simd8x64<uint8_t>& in, const json_block& block, size_t idx);
+  simdjson_inline void step(const uint8_t *block_buf, buf_block_reader<STEP_SIZE> &reader) noexcept;
+  simdjson_inline void next(const simd::block& in, const json_block& block, size_t idx);
   simdjson_warn_unused simdjson_inline error_code finish(dom_parser_implementation &parser, size_t idx, size_t len, stage1_mode partial);
 
   json_scanner scanner{};
@@ -218,9 +218,9 @@ error_code json_structural_indexer::index(const uint8_t *buf, size_t len, dom_pa
 }
 
 template<>
-simdjson_inline void json_structural_indexer::step<128>(const uint8_t *block, buf_block_reader<128> &reader) noexcept {
-  simd::simd8x64<uint8_t> in_1(block);
-  simd::simd8x64<uint8_t> in_2(block+64);
+simdjson_inline void json_structural_indexer::step<128>(const uint8_t *block_buf, buf_block_reader<128> &reader) noexcept {
+  simd::block in_1 = simd::load_block(block_buf);
+  simd::block in_2 = simd::load_block(block_buf+64);
   json_block block_1 = scanner.next(in_1);
   json_block block_2 = scanner.next(in_2);
   this->next(in_1, block_1, reader.block_index());
@@ -229,15 +229,15 @@ simdjson_inline void json_structural_indexer::step<128>(const uint8_t *block, bu
 }
 
 template<>
-simdjson_inline void json_structural_indexer::step<64>(const uint8_t *block, buf_block_reader<64> &reader) noexcept {
-  simd::simd8x64<uint8_t> in_1(block);
+simdjson_inline void json_structural_indexer::step<64>(const uint8_t *block_buf, buf_block_reader<64> &reader) noexcept {
+  simd::block in_1 = simd::load_block(block_buf);
   json_block block_1 = scanner.next(in_1);
   this->next(in_1, block_1, reader.block_index());
   reader.advance();
 }
 
-simdjson_inline void json_structural_indexer::next(const simd::simd8x64<uint8_t>& in, const json_block& block, size_t idx) {
-  uint64_t unescaped = in.lteq(0x1F);
+simdjson_inline void json_structural_indexer::next(const simd::block& in, const json_block& block, size_t idx) {
+  uint64_t unescaped = lteq(in, 0x1F);
 #if SIMDJSON_UTF8VALIDATION
   checker.check_next_input(in);
 #endif

@@ -13,13 +13,6 @@ namespace lsx {
 
 class implementation;
 
-namespace {
-namespace simd {
-template <typename T> struct simd8;
-template <typename T> struct simd8x64;
-} // namespace simd
-} // unnamed namespace
-
 } // namespace lsx
 } // namespace simdjson
 

@@ -38,80 +38,30 @@ namespace {
 
 using namespace simd;
 
-simdjson_inline json_character_block json_character_block::classify(const simd::simd8x64<uint8_t>& in) {
-  // These lookups rely on the fact that anything < 127 will match the lower 4 bits, which is why
-  // we can't use the generic lookup_16.
-  auto whitespace_table = simd8<uint8_t>::repeat_16(' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100);
-
-  // The 6 operators (:,[]{}) have these values:
-  //
-  // , 2C
-  // : 3A
-  // [ 5B
-  // { 7B
-  // ] 5D
-  // } 7D
-  //
-  // If you use | 0x20 to turn [ and ] into { and }, the lower 4 bits of each character is unique.
-  // We exploit this, using a simd 4-bit lookup to tell us which character match against, and then
-  // match it (against | 0x20).
-  //
-  // To prevent recognizing other characters, everything else gets compared with 0, which cannot
-  // match due to the | 0x20.
-  //
-  // NOTE: Due to the | 0x20, this ALSO treats <FF> and <SUB> (control characters 0C and 1A) like ,
-  // and :. This gets caught in stage 2, which checks the actual character to ensure the right
-  // operators are in the right places.
-  const auto op_table = simd8<uint8_t>::repeat_16(
-    0, 0, 0, 0,
-    0, 0, 0, 0,
-    0, 0, ':', '{', // : = 3A, [ = 5B, { = 7B
-    ',', '}', 0, 0  // , = 2C, ] = 5D, } = 7D
-  );
-
-  // We compute whitespace and op separately. If the code later only use one or the
-  // other, given the fact that all functions are aggressively inlined, we can
-  // hope that useless computations will be omitted. This is namely case when
-  // minifying (we only need whitespace).
-
-
-  const uint64_t whitespace = in.eq({
-    _mm_shuffle_epi8(whitespace_table, in.chunks[0]),
-    _mm_shuffle_epi8(whitespace_table, in.chunks[1]),
-    _mm_shuffle_epi8(whitespace_table, in.chunks[2]),
-    _mm_shuffle_epi8(whitespace_table, in.chunks[3])
-  });
-  // Turn [ and ] into { and }
-  const simd8x64<uint8_t> curlified{
-    in.chunks[0] | 0x20,
-    in.chunks[1] | 0x20,
-    in.chunks[2] | 0x20,
-    in.chunks[3] | 0x20
+// Identifies structural characters (comma, colon, braces, brackets) and ASCII
+// whitespace ('\r','\n','\t',' '). Operates on the whole 64-byte block via the
+// kernel's lookup_16 (SSE vpshufb gap fill, high-bit->0). The table values rely
+// on every target char being < 0x80 so the high-bit-zero behaviour excludes the
+// rest. The [ ]/{ } pair is folded with | 0x20. See the haswell backend for the
+// full table-design rationale.
+simdjson_inline json_character_block json_character_block::classify(const simd::block& in) {
+  static const uint8_t whitespace_table[16] = {
+    ' ', 100, 100, 100, 17, 100, 113, 2, 100, '\t', '\n', 112, 100, '\r', 100, 100
   };
-  const uint64_t op = curlified.eq({
-    _mm_shuffle_epi8(op_table, in.chunks[0]),
-    _mm_shuffle_epi8(op_table, in.chunks[1]),
-    _mm_shuffle_epi8(op_table, in.chunks[2]),
-    _mm_shuffle_epi8(op_table, in.chunks[3])
-  });
-    return { whitespace, op };
+  static const uint8_t op_table[16] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, ':', '{', ',', '}', 0, 0
+  };
+  const block ws = lookup_16(in, whitespace_table);
+  const uint64_t whitespace = to_bitmask(in == ws);
+  const block opl = lookup_16(in, op_table);
+  const block curl = in | block(uint8_t(0x20));
+  const uint64_t op = to_bitmask(curl == opl);
+  return { whitespace, op };
 }
 
-simdjson_inline bool is_ascii(const simd8x64<uint8_t>& input) {
-  return input.reduce_or().is_ascii();
-}
-
-simdjson_unused simdjson_inline simd8<bool> must_be_continuation(const simd8<uint8_t> prev1, const simd8<uint8_t> prev2, const simd8<uint8_t> prev3) {
-  simd8<uint8_t> is_second_byte = prev1.saturating_sub(0xc0u-1); // Only 11______ will be > 0
-  simd8<uint8_t> is_third_byte  = prev2.saturating_sub(0xe0u-1); // Only 111_____ will be > 0
-  simd8<uint8_t> is_fourth_byte = prev3.saturating_sub(0xf0u-1); // Only 1111____ will be > 0
-  // Caller requires a bool (all 1's). All values resulting from the subtraction will be <= 64, so signed comparison is fine.
-  return simd8<int8_t>(is_second_byte | is_third_byte | is_fourth_byte) > int8_t(0);
-}
-
-simdjson_inline simd8<uint8_t> must_be_2_3_continuation(const simd8<uint8_t> prev2, const simd8<uint8_t> prev3) {
-  simd8<uint8_t> is_third_byte  = prev2.saturating_sub(0xe0u-0x80); // Only 111_____ will be >= 0x80
-  simd8<uint8_t> is_fourth_byte = prev3.saturating_sub(0xf0u-0x80); // Only 1111____ will be >= 0x80
+simdjson_inline simd::block must_be_2_3_continuation(const simd::block prev2, const simd::block prev3) {
+  block is_third_byte  = saturating_sub(prev2, block(uint8_t(0xe0u-0x80))); // Only 111_____ will be >= 0x80
+  block is_fourth_byte = saturating_sub(prev3, block(uint8_t(0xf0u-0x80))); // Only 1111____ will be >= 0x80
   return is_third_byte | is_fourth_byte;
 }
 

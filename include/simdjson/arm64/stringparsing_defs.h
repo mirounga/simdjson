@@ -8,19 +8,25 @@
 #endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
-namespace arm64 {
+namespace SIMDJSON_IMPLEMENTATION {
 namespace {
 
 using namespace simd;
+namespace dp = std::simd;
 
-// Holds backslashes and quotes locations.
+// The string-parsing scan processes 32 bytes at a time with a std::simd vector
+// (a half-block); no simd8 wrapper. Uses the kernel's free functions. (The old NEON
+// 4-bit-per-byte to_bitmask64 fast path + SIMDJSON_SKIP_BACKSLASH_SHORT_CIRCUIT are
+// dropped in favor of the proven x86 std::simd path.)
+using sp_vec = dp::vec<uint8_t, 32>;
+
 struct backslash_and_quote {
 public:
   static constexpr uint32_t BYTES_PROCESSED = 32;
   simdjson_inline backslash_and_quote copy_and_find(const uint8_t *src, uint8_t *dst);
 
   simdjson_inline bool has_quote_first() { return ((bs_bits - 1) & quote_bits) != 0; }
-  simdjson_inline bool has_backslash() { return bs_bits != 0; }
+  simdjson_inline bool has_backslash() { return ((quote_bits - 1) & bs_bits) != 0; }
   simdjson_inline int quote_index() { return trailing_zeroes(quote_bits); }
   simdjson_inline int backslash_index() { return trailing_zeroes(bs_bits); }
 
@@ -29,51 +35,37 @@ public:
 }; // struct backslash_and_quote
 
 simdjson_inline backslash_and_quote backslash_and_quote::copy_and_find(const uint8_t *src, uint8_t *dst) {
-  // this can read up to 31 bytes beyond the buffer size, but we require
-  // SIMDJSON_PADDING of padding
   static_assert(SIMDJSON_PADDING >= (BYTES_PROCESSED - 1), "backslash and quote finder must process fewer than SIMDJSON_PADDING bytes");
-  simd8<uint8_t> v0(src);
-  simd8<uint8_t> v1(src + sizeof(v0));
-  v0.store(dst);
-  v1.store(dst + sizeof(v0));
-
-  // Getting a 64-bit bitmask is much cheaper than multiple 16-bit bitmasks on ARM; therefore, we
-  // smash them together into a 64-byte mask and get the bitmask from there.
-  uint64_t bs_and_quote = simd8x64<bool>(v0 == '\\', v1 == '\\', v0 == '"', v1 == '"').to_bitmask();
+  sp_vec v = dp::unchecked_load<sp_vec>(src, 32);
+  dp::unchecked_store(v, dst, 32);
   return {
-    uint32_t(bs_and_quote),      // bs_bits
-    uint32_t(bs_and_quote >> 32) // quote_bits
+      uint32_t(to_bitmask(v == sp_vec(uint8_t('\\')))), // bs_bits
+      uint32_t(to_bitmask(v == sp_vec(uint8_t('"')))),  // quote_bits
   };
 }
 
 struct escaping {
-  static constexpr uint32_t BYTES_PROCESSED = 16;
+  static constexpr uint32_t BYTES_PROCESSED = 32;
   simdjson_inline static escaping copy_and_find(const uint8_t *src, uint8_t *dst);
 
   simdjson_inline bool has_escape() { return escape_bits != 0; }
-  simdjson_inline int escape_index() { return trailing_zeroes(escape_bits) / 4; }
+  simdjson_inline int escape_index() { return trailing_zeroes(escape_bits); }
 
   uint64_t escape_bits;
 }; // struct escaping
 
-
-
 simdjson_inline escaping escaping::copy_and_find(const uint8_t *src, uint8_t *dst) {
   static_assert(SIMDJSON_PADDING >= (BYTES_PROCESSED - 1), "escaping finder must process fewer than SIMDJSON_PADDING bytes");
-  simd8<uint8_t> v(src);
-  v.store(dst);
-  simd8<bool> is_quote = (v == '"');
-  simd8<bool> is_backslash = (v == '\\');
-  simd8<bool> is_control = (v < 32);
-  return {
-    (is_backslash | is_quote | is_control).to_bitmask64()
-  };
+  sp_vec v = dp::unchecked_load<sp_vec>(src, 32);
+  dp::unchecked_store(v, dst, 32);
+  auto is_quote = (v == sp_vec(uint8_t('"')));
+  auto is_backslash = (v == sp_vec(uint8_t('\\')));
+  auto is_control = (v < sp_vec(uint8_t(32)));
+  return { to_bitmask(is_backslash | is_quote | is_control) };
 }
 
-
-
 } // unnamed namespace
-} // namespace arm64
+} // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 
 #endif // SIMDJSON_ARM64_STRINGPARSING_DEFS_H

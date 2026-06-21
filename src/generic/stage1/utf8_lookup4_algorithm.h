@@ -13,7 +13,11 @@ namespace utf8_validation {
 
 using namespace simd;
 
-  simdjson_inline simd8<uint8_t> check_special_cases(const simd8<uint8_t> input, const simd8<uint8_t> prev1) {
+  // The UTF-8 validator stays in the vector-mask domain: it operates on the
+  // 64-byte `block` directly (std::simd splits it into native registers) and
+  // only reduces to a bool at the very end via any_set(error). lookup_16 takes
+  // a 16-byte table; prev<N> / saturating_sub are the kernel free functions.
+  simdjson_inline block check_special_cases(const block input, const block prev1) {
 // Bit 0 = Too Short (lead byte/ASCII followed by lead byte/ASCII)
 // Bit 1 = Too Long (ASCII followed by continuation)
 // Bit 2 = Overlong 3-byte
@@ -41,7 +45,8 @@ using namespace simd;
                                                 // 11111___ 1000____
     constexpr const uint8_t OVERLONG_4  = 1<<6; // 11110000 1000____
 
-    const simd8<uint8_t> byte_1_high = prev1.shr<4>().lookup_16<uint8_t>(
+    constexpr const uint8_t CARRY = TOO_SHORT | TOO_LONG | TWO_CONTS; // These all have ____ in byte 1 .
+    static const uint8_t byte_1_high_table[16] = {
       // 0_______ ________ <ASCII in byte 1>
       TOO_LONG, TOO_LONG, TOO_LONG, TOO_LONG,
       TOO_LONG, TOO_LONG, TOO_LONG, TOO_LONG,
@@ -55,9 +60,8 @@ using namespace simd;
       TOO_SHORT | OVERLONG_3 | SURROGATE,
       // 1111____ ________ <four+ byte lead in byte 1>
       TOO_SHORT | TOO_LARGE | TOO_LARGE_1000 | OVERLONG_4
-    );
-    constexpr const uint8_t CARRY = TOO_SHORT | TOO_LONG | TWO_CONTS; // These all have ____ in byte 1 .
-    const simd8<uint8_t> byte_1_low = (prev1 & 0x0F).lookup_16<uint8_t>(
+    };
+    static const uint8_t byte_1_low_table[16] = {
       // ____0000 ________
       CARRY | OVERLONG_3 | OVERLONG_2 | OVERLONG_4,
       // ____0001 ________
@@ -65,7 +69,6 @@ using namespace simd;
       // ____001_ ________
       CARRY,
       CARRY,
-
       // ____0100 ________
       CARRY | TOO_LARGE,
       // ____0101 ________
@@ -73,7 +76,6 @@ using namespace simd;
       // ____011_ ________
       CARRY | TOO_LARGE | TOO_LARGE_1000,
       CARRY | TOO_LARGE | TOO_LARGE_1000,
-
       // ____1___ ________
       CARRY | TOO_LARGE | TOO_LARGE_1000,
       CARRY | TOO_LARGE | TOO_LARGE_1000,
@@ -84,12 +86,11 @@ using namespace simd;
       CARRY | TOO_LARGE | TOO_LARGE_1000 | SURROGATE,
       CARRY | TOO_LARGE | TOO_LARGE_1000,
       CARRY | TOO_LARGE | TOO_LARGE_1000
-    );
-    const simd8<uint8_t> byte_2_high = input.shr<4>().lookup_16<uint8_t>(
+    };
+    static const uint8_t byte_2_high_table[16] = {
       // ________ 0_______ <ASCII in byte 2>
       TOO_SHORT, TOO_SHORT, TOO_SHORT, TOO_SHORT,
       TOO_SHORT, TOO_SHORT, TOO_SHORT, TOO_SHORT,
-
       // ________ 1000____
       TOO_LONG | OVERLONG_2 | TWO_CONTS | OVERLONG_3 | TOO_LARGE_1000 | OVERLONG_4,
       // ________ 1001____
@@ -97,18 +98,20 @@ using namespace simd;
       // ________ 101_____
       TOO_LONG | OVERLONG_2 | TWO_CONTS | SURROGATE  | TOO_LARGE,
       TOO_LONG | OVERLONG_2 | TWO_CONTS | SURROGATE  | TOO_LARGE,
-
       // ________ 11______
       TOO_SHORT, TOO_SHORT, TOO_SHORT, TOO_SHORT
-    );
+    };
+    const block byte_1_high = lookup_16(prev1 >> 4, byte_1_high_table);
+    const block byte_1_low  = lookup_16(prev1 & block(uint8_t(0x0F)), byte_1_low_table);
+    const block byte_2_high = lookup_16(input >> 4, byte_2_high_table);
     return (byte_1_high & byte_1_low & byte_2_high);
   }
-  simdjson_inline simd8<uint8_t> check_multibyte_lengths(const simd8<uint8_t> input,
-      const simd8<uint8_t> prev_input, const simd8<uint8_t> sc) {
-    simd8<uint8_t> prev2 = input.prev<2>(prev_input);
-    simd8<uint8_t> prev3 = input.prev<3>(prev_input);
-    simd8<uint8_t> must23 = must_be_2_3_continuation(prev2, prev3);
-    simd8<uint8_t> must23_80 = must23 & uint8_t(0x80);
+  simdjson_inline block check_multibyte_lengths(const block input,
+      const block prev_input, const block sc) {
+    block prev2 = prev<2>(input, prev_input);
+    block prev3 = prev<3>(input, prev_input);
+    block must23 = must_be_2_3_continuation(prev2, prev3);
+    block must23_80 = must23 & block(uint8_t(0x80));
     return must23_80 ^ sc;
   }
 
@@ -116,10 +119,9 @@ using namespace simd;
   // Return nonzero if there are incomplete multibyte characters at the end of the block:
   // e.g. if there is a 4-byte character, but it's 3 bytes from the end.
   //
-  simdjson_inline simd8<uint8_t> is_incomplete(const simd8<uint8_t> input) {
+  simdjson_inline block is_incomplete(const block input) {
     // If the previous input's last 3 bytes match this, they're too short (they ended at EOF):
     // ... 1111____ 111_____ 11______
-#if SIMDJSON_IMPLEMENTATION_ICELAKE || (SIMDJSON_IMPLEMENTATION_RVV_VLS && __riscv_v_fixed_vlen >= 512)
     static const uint8_t max_array[64] = {
       255, 255, 255, 255, 255, 255, 255, 255,
       255, 255, 255, 255, 255, 255, 255, 255,
@@ -130,35 +132,28 @@ using namespace simd;
       255, 255, 255, 255, 255, 255, 255, 255,
       255, 255, 255, 255, 255, 0xf0u-1, 0xe0u-1, 0xc0u-1
     };
-#else
-    static const uint8_t max_array[32] = {
-      255, 255, 255, 255, 255, 255, 255, 255,
-      255, 255, 255, 255, 255, 255, 255, 255,
-      255, 255, 255, 255, 255, 255, 255, 255,
-      255, 255, 255, 255, 255, 0xf0u-1, 0xe0u-1, 0xc0u-1
-    };
-#endif
-    const simd8<uint8_t> max_value(&max_array[sizeof(max_array)-sizeof(simd8<uint8_t>)]);
-    return input.gt_bits(max_value);
+    const block max_value = load_block(max_array);
+    // gt_bits: nonzero exactly where input > max_value (== saturating_sub).
+    return saturating_sub(input, max_value);
   }
 
   struct utf8_checker {
-    // If this is nonzero, there has been a UTF-8 error.
-    simd8<uint8_t> error;
+    // If this is nonzero, there has been a UTF-8 error. (zero-initialized)
+    block error = block(uint8_t(0));
     // The last input we received
-    simd8<uint8_t> prev_input_block;
+    block prev_input_block = block(uint8_t(0));
     // Whether the last input we received was incomplete (used for ASCII fast path)
-    simd8<uint8_t> prev_incomplete;
+    block prev_incomplete = block(uint8_t(0));
 
     //
     // Check whether the current bytes are valid UTF-8.
     //
-    simdjson_inline void check_utf8_bytes(const simd8<uint8_t> input, const simd8<uint8_t> prev_input) {
+    simdjson_inline void check_utf8_bytes(const block input, const block prev_input) {
       // Flip prev1...prev3 so we can easily determine if they are 2+, 3+ or 4+ lead bytes
       // (2, 3, 4-byte leads become large positive numbers instead of small negative numbers)
-      simd8<uint8_t> prev1 = input.prev<1>(prev_input);
-      simd8<uint8_t> sc = check_special_cases(input, prev1);
-      this->error |= check_multibyte_lengths(input, prev_input, sc);
+      block prev1 = prev<1>(input, prev_input);
+      block sc = check_special_cases(input, prev1);
+      this->error = this->error | check_multibyte_lengths(input, prev_input, sc);
     }
 
     // The only problem that can happen at EOF is that a multibyte character is too short
@@ -167,36 +162,23 @@ using namespace simd;
     simdjson_inline void check_eof() {
       // If the previous block had incomplete UTF-8 characters at the end, an ASCII block can't
       // possibly finish them.
-      this->error |= this->prev_incomplete;
+      this->error = this->error | this->prev_incomplete;
     }
 
-    simdjson_inline void check_next_input(const simd8x64<uint8_t>& input) {
+    // The 64-byte block is a single std::simd vector now: no NUM_CHUNKS loop.
+    // prev<N> handles the cross-block carry over the whole 64 bytes at once.
+    simdjson_inline void check_next_input(const block& input) {
       if(simdjson_likely(is_ascii(input))) {
-        this->error |= this->prev_incomplete;
+        this->error = this->error | this->prev_incomplete;
       } else {
-        // you might think that a for-loop would work, but under Visual Studio, it is not good enough.
-        static_assert((simd8x64<uint8_t>::NUM_CHUNKS == 1)
-                ||(simd8x64<uint8_t>::NUM_CHUNKS == 2)
-                || (simd8x64<uint8_t>::NUM_CHUNKS == 4),
-                "We support one, two or four chunks per 64-byte block.");
-        SIMDJSON_IF_CONSTEXPR (simd8x64<uint8_t>::NUM_CHUNKS == 1) {
-          this->check_utf8_bytes(input.get<0>(), this->prev_input_block);
-        } else SIMDJSON_IF_CONSTEXPR (simd8x64<uint8_t>::NUM_CHUNKS == 2) {
-          this->check_utf8_bytes(input.get<0>(), this->prev_input_block);
-          this->check_utf8_bytes(input.get<1>(), input.get<0>());
-        } else SIMDJSON_IF_CONSTEXPR (simd8x64<uint8_t>::NUM_CHUNKS == 4) {
-          this->check_utf8_bytes(input.get<0>(), this->prev_input_block);
-          this->check_utf8_bytes(input.get<1>(), input.get<0>());
-          this->check_utf8_bytes(input.get<2>(), input.get<1>());
-          this->check_utf8_bytes(input.get<3>(), input.get<2>());
-        }
-        this->prev_incomplete = is_incomplete(input.get<simd8x64<uint8_t>::NUM_CHUNKS-1>());
-        this->prev_input_block = input.get<simd8x64<uint8_t>::NUM_CHUNKS-1>();
+        this->check_utf8_bytes(input, this->prev_input_block);
+        this->prev_incomplete = is_incomplete(input);
+        this->prev_input_block = input;
       }
     }
     // do not forget to call check_eof!
     simdjson_warn_unused simdjson_inline error_code errors() {
-      return this->error.any_bits_set_anywhere() ? error_code::UTF8_ERROR : error_code::SUCCESS;
+      return any_set(this->error) ? error_code::UTF8_ERROR : error_code::SUCCESS;
     }
 
   }; // struct utf8_checker

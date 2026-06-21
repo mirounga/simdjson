@@ -10,7 +10,7 @@ namespace SIMDJSON_IMPLEMENTATION {
 namespace {
 
 struct json_character_block {
-  static simdjson_inline json_character_block classify(const simd::simd8x64<uint8_t>& in);
+  static simdjson_inline json_character_block classify(const simd::block& in);
 
   simdjson_inline uint64_t whitespace() const noexcept { return _whitespace; }
   simdjson_inline uint64_t op() const noexcept { return _op; }

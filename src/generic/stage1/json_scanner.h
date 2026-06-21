@@ -106,7 +106,7 @@ private:
 class json_scanner {
 public:
   json_scanner() = default;
-  simdjson_inline json_block next(const simd::simd8x64<uint8_t>& in);
+  simdjson_inline json_block next(const simd::block& in);
   // Returns either UNCLOSED_STRING or SUCCESS
   simdjson_warn_unused simdjson_inline error_code finish();
 
@@ -131,7 +131,7 @@ simdjson_inline uint64_t follows(const uint64_t match, uint64_t &overflow) {
   return result;
 }
 
-simdjson_inline json_block json_scanner::next(const simd::simd8x64<uint8_t>& in) {
+simdjson_inline json_block json_scanner::next(const simd::block& in) {
   json_string_block strings = string_scanner.next(in);
   // identifies the white-space and the structural characters
   json_character_block characters = json_character_block::classify(in);

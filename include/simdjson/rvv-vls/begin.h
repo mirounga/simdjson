@@ -6,5 +6,3 @@
 #include "simdjson/rvv-vls/simd.h"
 #include "simdjson/rvv-vls/stringparsing_defs.h"
 #include "simdjson/rvv-vls/numberparsing_defs.h"
-
-#define SIMDJSON_SKIP_BACKSLASH_SHORT_CIRCUIT 1

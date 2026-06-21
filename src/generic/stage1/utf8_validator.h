@@ -20,13 +20,13 @@ bool generic_validate_utf8(const uint8_t * input, size_t length) {
     checker c{};
     buf_block_reader<64> reader(input, length);
     while (reader.has_full_block()) {
-      simd::simd8x64<uint8_t> in(reader.full_block());
+      simd::block in = simd::load_block(reader.full_block());
       c.check_next_input(in);
       reader.advance();
     }
-    uint8_t block[64]{};
-    reader.get_remainder(block);
-    simd::simd8x64<uint8_t> in(block);
+    uint8_t block_buf[64]{};
+    reader.get_remainder(block_buf);
+    simd::block in = simd::load_block(block_buf);
     c.check_next_input(in);
     reader.advance();
     c.check_eof();

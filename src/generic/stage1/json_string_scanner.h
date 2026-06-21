@@ -40,7 +40,7 @@ struct json_string_block {
 // Scans blocks for string characters, storing the state necessary to do so
 class json_string_scanner {
 public:
-  simdjson_really_inline json_string_block next(const simd::simd8x64<uint8_t>& in);
+  simdjson_really_inline json_string_block next(const simd::block& in);
   // Returns either UNCLOSED_STRING or SUCCESS
   simdjson_really_inline error_code finish();
 
@@ -59,10 +59,10 @@ private:
 //
 // Backslash sequences outside of quotes will be detected in stage 2.
 //
-simdjson_really_inline json_string_block json_string_scanner::next(const simd::simd8x64<uint8_t>& in) {
-  const uint64_t backslash = in.eq('\\');
+simdjson_really_inline json_string_block json_string_scanner::next(const simd::block& in) {
+  const uint64_t backslash = eq(in, '\\');
   const uint64_t escaped = escape_scanner.next(backslash).escaped;
-  const uint64_t quote = in.eq('"') & ~escaped;
+  const uint64_t quote = eq(in, '"') & ~escaped;
 
   //
   // prefix_xor flips on bits inside the string (and flips off the end quote).

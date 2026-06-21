@@ -6,5 +6,3 @@
 #include "simdjson/lsx/numberparsing_defs.h"
 #include "simdjson/lsx/simd.h"
 #include "simdjson/lsx/stringparsing_defs.h"
-
-#define SIMDJSON_SKIP_BACKSLASH_SHORT_CIRCUIT 1

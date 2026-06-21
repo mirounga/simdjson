@@ -1,5 +1,8 @@
 #define SIMDJSON_IMPLEMENTATION haswell
 
+// Haswell rides the shared std::simd kernel with AVX2 native gap fills
+// (lookup_16/prev/compress) for the 64-byte block; see haswell/simd.h.
+
 #include "simdjson/haswell/base.h"
 #include "simdjson/haswell/intrinsics.h"
 

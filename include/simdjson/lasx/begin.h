@@ -13,7 +13,3 @@ SIMDJSON_TARGET_REGION("lasx,lsx")
 #include "simdjson/lasx/numberparsing_defs.h"
 #include "simdjson/lasx/simd.h"
 #include "simdjson/lasx/stringparsing_defs.h"
-
-#define SIMDJSON_SKIP_BACKSLASH_SHORT_CIRCUIT 1
-
-
