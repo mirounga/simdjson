@@ -5,4 +5,3 @@
 #include "simdjson/lsx/bitmask.h"
 #include "simdjson/lsx/numberparsing_defs.h"
 #include "simdjson/lsx/simd.h"
-#include "simdjson/lsx/stringparsing_defs.h"

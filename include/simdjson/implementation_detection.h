@@ -26,11 +26,11 @@
 // in which we include them.
 //
 
-// The x86 SIMD backends (westmere/haswell/icelake) ride the shared std::simd kernel, which
-// needs the C++26 <simd> header. When the TU is compiled below C++26 (e.g. the C++11/14/17
-// single-header / quickstart acceptance builds, or any non-C++26 consumer), those backends are
-// disabled and the scalar `fallback` takes over. The compiled library is always built at C++26,
-// so it still carries all three for runtime dispatch.
+// ALL backends -- including `fallback` -- ride the shared std::simd kernel, which needs the
+// C++26 <simd> header. (fallback targets no SIMD ISA, so the compiler scalarizes the kernel for
+// it.) C++26 is therefore the floor: when the TU is compiled below C++26, every backend is
+// disabled and there is NO implementation -- the #error in the builtin cascade below fires. The
+// compiled library is always built at C++26 and carries every backend for runtime dispatch.
 #ifndef SIMDJSON_STD_SIMD_AVAILABLE
 #if defined(__has_include) && __has_include(<simd>) && (__cplusplus > 202302L)
 #define SIMDJSON_STD_SIMD_AVAILABLE 1
@@ -164,8 +164,13 @@
 #endif
 
 // Default Fallback to on unless a builtin implementation has already been selected.
+// Fallback now rides the std::simd kernel too (the compiler scalarizes it), so like every
+// other backend it requires C++26 (SIMDJSON_STD_SIMD_AVAILABLE). Below C++26 there is no
+// implementation at all and the #error in the builtin cascade below fires.
 #ifndef SIMDJSON_IMPLEMENTATION_FALLBACK
-#if SIMDJSON_CAN_ALWAYS_RUN_ARM64 || SIMDJSON_CAN_ALWAYS_RUN_SVE || SIMDJSON_CAN_ALWAYS_RUN_ICELAKE || SIMDJSON_CAN_ALWAYS_RUN_HASWELL || SIMDJSON_CAN_ALWAYS_RUN_WESTMERE || SIMDJSON_CAN_ALWAYS_RUN_PPC64 || SIMDJSON_CAN_ALWAYS_RUN_LSX || SIMDJSON_CAN_ALWAYS_RUN_LASX || SIMDJSON_CAN_ALWAYS_RUN_RVV_VLS
+#if !SIMDJSON_STD_SIMD_AVAILABLE
+#define SIMDJSON_IMPLEMENTATION_FALLBACK 0
+#elif SIMDJSON_CAN_ALWAYS_RUN_ARM64 || SIMDJSON_CAN_ALWAYS_RUN_SVE || SIMDJSON_CAN_ALWAYS_RUN_ICELAKE || SIMDJSON_CAN_ALWAYS_RUN_HASWELL || SIMDJSON_CAN_ALWAYS_RUN_WESTMERE || SIMDJSON_CAN_ALWAYS_RUN_PPC64 || SIMDJSON_CAN_ALWAYS_RUN_LSX || SIMDJSON_CAN_ALWAYS_RUN_LASX || SIMDJSON_CAN_ALWAYS_RUN_RVV_VLS
 // if anything at all except fallback can always run, then disable fallback.
 #define SIMDJSON_IMPLEMENTATION_FALLBACK 0
 #else

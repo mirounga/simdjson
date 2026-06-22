@@ -54,3 +54,9 @@ using namespace simd;
 } // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
+
+// The stage-2 string-parsing finders (backslash_and_quote / escaping) build directly on the
+// kernel ops above (load_block / to_bitmask) over the full 64-byte block, so they are pulled in
+// here -- once per implementation, alongside the ops they use, reached only through the per-ISA
+// simd.h (no begin.h plumbing). Every backend, including fallback (compiler-scalarized), uses it.
+#include "simdjson/generic/stringparsing_defs.h"

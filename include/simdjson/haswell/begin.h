@@ -20,4 +20,3 @@ SIMDJSON_TARGET_REGION("avx2,bmi,pclmul,lzcnt,popcnt")
 #include "simdjson/haswell/bitmask.h"
 #include "simdjson/haswell/numberparsing_defs.h"
 #include "simdjson/haswell/simd.h"
-#include "simdjson/haswell/stringparsing_defs.h"

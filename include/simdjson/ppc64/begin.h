@@ -5,4 +5,3 @@
 #include "simdjson/ppc64/bitmask.h"
 #include "simdjson/ppc64/numberparsing_defs.h"
 #include "simdjson/ppc64/simd.h"
-#include "simdjson/ppc64/stringparsing_defs.h"

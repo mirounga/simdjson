@@ -434,16 +434,17 @@ class SimdjsonRepository:
             return include_path in self.files
 
     def __getitem__(self, include_path: str):
-        # The shared std::simd kernel (generic/simd_block.h, generic/simd_kernel.h)
-        # and the per-backend gap fills (<isa>/simd_gaps.h) are excluded from the
-        # single-header distribution: they need <simd> (C++26), and they are reached
-        # through the twice-included <isa>/simd.h path (haswell.cpp pulls both
-        # haswell.h and begin.h), which the once-per-impl amalgamator cannot inline.
+        # The shared std::simd kernel (generic/simd_block.h, generic/simd_kernel.h),
+        # the per-backend gap fills (<isa>/simd_gaps.h), and the shared string finder
+        # (generic/stringparsing_defs.h) are excluded from the single-header
+        # distribution: they need <simd> (C++26), and they are reached through the
+        # twice-included <isa>/simd.h path (haswell.cpp pulls both haswell.h and
+        # begin.h), which the once-per-impl amalgamator cannot inline.
         # Returning None copies any #include of them verbatim instead of following it;
         # in the single header those includes sit inside `#if SIMDJSON_IMPLEMENTATION_<ISA>`
         # regions, which compile out below C++26 (backends gated on
         # SIMDJSON_STD_SIMD_AVAILABLE), keeping the single header C++11/14/17-standalone.
-        if 'simd_block' in include_path or 'simd_kernel' in include_path or 'simd_gaps' in include_path:
+        if 'simd_block' in include_path or 'simd_kernel' in include_path or 'simd_gaps' in include_path or 'generic/stringparsing_defs' in include_path:
             return None
         if include_path not in self.files:
             root = self._included_filename_root(include_path)
@@ -479,7 +480,7 @@ class SimdjsonRepository:
         # per-backend gap fills (e.g. haswell/simd_gaps.h) are reached only through the
         # twice-included <isa>/simd.h path and need <simd> (C++26); they are excluded from the
         # portable single-header distribution (copied verbatim; see __getitem__).
-        all_files = set(f for f in all_files if 'simd_block' not in f and 'simd_kernel' not in f and 'simd_gaps' not in f)
+        all_files = set(f for f in all_files if 'simd_block' not in f and 'simd_kernel' not in f and 'simd_gaps' not in f and 'generic/stringparsing_defs' not in f)
         if len(all_files) > 0:
             bullet_list = "\n".join(f"        {root}/{f}" for f in sorted(all_files))
             raise AssertionError(

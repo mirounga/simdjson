@@ -14,4 +14,3 @@ SIMDJSON_TARGET_REGION("sse4.2,pclmul,popcnt")
 #include "simdjson/westmere/bitmask.h"
 #include "simdjson/westmere/numberparsing_defs.h"
 #include "simdjson/westmere/simd.h"
-#include "simdjson/westmere/stringparsing_defs.h"

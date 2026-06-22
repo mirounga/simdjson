@@ -21,4 +21,3 @@ SIMDJSON_TARGET_REGION("sve2")
 #include "simdjson/sve/bitmask.h"
 #include "simdjson/sve/numberparsing_defs.h"
 #include "simdjson/sve/simd.h"
-#include "simdjson/sve/stringparsing_defs.h"
