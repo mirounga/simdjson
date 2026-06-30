@@ -1,3 +1,7 @@
+# C API test, added before the directory-wide link_libraries below so it does not inherit the
+# C++-only internal flags (it is compiled as C). It links simdjson explicitly.
+add_subdirectory(c_api)
+
 # Most tests need test data, and many need windows headers.
 link_libraries(simdjson-internal-flags test-data simdjson-windows-headers)
 include(${PROJECT_SOURCE_DIR}/cmake/add_cpp_test.cmake)

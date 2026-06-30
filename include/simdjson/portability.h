@@ -141,26 +141,12 @@ using std::size_t;
 //
 
 // We are going to use runtime dispatch.
-#if defined(SIMDJSON_IS_X86_64) || defined(SIMDJSON_IS_LSX)
-#ifdef __clang__
-// clang does not have GCC push pop
-// warning: clang attribute push can't be used within a namespace in clang up
-// til 8.0 so SIMDJSON_TARGET_REGION and SIMDJSON_UNTARGET_REGION must be *outside* of a
-// namespace.
-#define SIMDJSON_TARGET_REGION(T)                                                       \
-  _Pragma(SIMDJSON_STRINGIFY(                                                           \
-      clang attribute push(__attribute__((target(T))), apply_to = function)))
-#define SIMDJSON_UNTARGET_REGION _Pragma("clang attribute pop")
-#elif defined(__GNUC__)
-// GCC is easier
-#define SIMDJSON_TARGET_REGION(T)                                                       \
-  _Pragma("GCC push_options") _Pragma(SIMDJSON_STRINGIFY(GCC target(T)))
-#define SIMDJSON_UNTARGET_REGION _Pragma("GCC pop_options")
-#endif // clang then gcc
-
-#endif // defined(SIMDJSON_IS_X86_64) || defined(SIMDJSON_IS_LSX)
-
-// Default target region macros don't do anything.
+//
+// Per-function target attributes (SIMDJSON_TARGET_REGION) are RETIRED: the std::simd
+// kernel's always_inline ops carry no per-function target attribute, so each backend is
+// now compiled as its own translation unit with a global -march (see CMake). These macros
+// are therefore no-ops everywhere; the begin.h files keep the SIMDJSON_TARGET_REGION("...")
+// lines only as the documented source of each backend's flag list (mirrored by CMake).
 #ifndef SIMDJSON_TARGET_REGION
 #define SIMDJSON_TARGET_REGION(T)
 #define SIMDJSON_UNTARGET_REGION

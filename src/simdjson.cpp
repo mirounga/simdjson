@@ -18,39 +18,11 @@ SIMDJSON_PUSH_DISABLE_UNUSED_WARNINGS
 
 #include <implementation.cpp>
 
-#define SIMDJSON_CONDITIONAL_INCLUDE
-
-#if SIMDJSON_IMPLEMENTATION_ARM64
-#include <arm64.cpp>
-#endif
-#if SIMDJSON_IMPLEMENTATION_SVE
-#include <sve.cpp>
-#endif
-#if SIMDJSON_IMPLEMENTATION_HASWELL
-#include <haswell.cpp>
-#endif
-#if SIMDJSON_IMPLEMENTATION_ICELAKE
-#include <icelake.cpp>
-#endif
-#if SIMDJSON_IMPLEMENTATION_PPC64
-#include <ppc64.cpp>
-#endif
-#if SIMDJSON_IMPLEMENTATION_WESTMERE
-#include <westmere.cpp>
-#endif
-#if SIMDJSON_IMPLEMENTATION_LASX
-#include <lasx.cpp>
-#endif
-#if SIMDJSON_IMPLEMENTATION_LSX
-#include <lsx.cpp>
-#endif
-#if SIMDJSON_IMPLEMENTATION_RVV_VLS
-#include <rvv-vls.cpp>
-#endif
-#if SIMDJSON_IMPLEMENTATION_FALLBACK
-#include <fallback.cpp>
-#endif
-#undef SIMDJSON_CONDITIONAL_INCLUDE
+// NOTE: the per-ISA backends (src/<isa>.cpp) are NO LONGER amalgamated into this TU.
+// Each is compiled as its own object with its own global -march (the std::simd kernel
+// needs a global target, not per-function attributes); CMake adds them to the library
+// and the runtime dispatcher in implementation.cpp selects among them. This TU is the
+// baseline aggregate: shared tables (above) + the dispatcher (implementation.cpp).
 
 SIMDJSON_POP_DISABLE_UNUSED_WARNINGS
 

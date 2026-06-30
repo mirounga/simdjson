@@ -9,6 +9,13 @@
 // per-backend <isa>/simd_gaps.h (defines `native::` gap fills over `block`), then
 // generic/simd_kernel.h (the free-function ops that call `native::`).
 
+// Make sure SIMDJSON_STD_SIMD_AVAILABLE (and the implementation-set macros) are defined
+// before we test it. When a backend is compiled as its own translation unit (the
+// separate-object build), <isa>/begin.h does not pull in implementation_detection.h
+// ahead of this header the way the old amalgamated TU did. The header carries its own
+// include guard, so this is idempotent.
+#include "simdjson/implementation_detection.h"
+
 // C++26 data-parallel types + std::bit_cast. Guarded by the std::simd availability
 // macro so the system headers never reach a pre-C++26 TU (e.g. the C++11/14/17
 // single-header builds, where this whole region is compiled out anyway). System

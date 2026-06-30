@@ -54,6 +54,31 @@ simdjson_inline int trailing_zeroes(uint64_t input_num) {
 #endif// _MSC_VER
 }
 
+// The generic stage-1 indexer needs these too (the fallback backend now rides it).
+// Portable versions (no BMI/POPCNT intrinsics).
+/* result might be undefined when input_num is zero */
+simdjson_inline uint64_t clear_lowest_bit(uint64_t input_num) {
+  return input_num & (input_num - 1);
+}
+
+simdjson_inline int count_ones(uint64_t input_num) {
+#ifdef _MSC_VER
+  return (int)__popcnt64(input_num);
+#else
+  return __builtin_popcountll(input_num);
+#endif
+}
+
+simdjson_inline bool add_overflow(uint64_t value1, uint64_t value2, uint64_t *result) {
+#ifdef _MSC_VER
+  return _addcarry_u64(0, value1, value2,
+                       reinterpret_cast<unsigned __int64 *>(result));
+#else
+  return __builtin_uaddll_overflow(value1, value2,
+                                   reinterpret_cast<unsigned long long *>(result));
+#endif
+}
+
 } // unnamed namespace
 } // namespace fallback
 } // namespace simdjson

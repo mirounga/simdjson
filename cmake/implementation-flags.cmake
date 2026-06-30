@@ -104,3 +104,61 @@ Use SIMDJSON_IMPLEMENTATION=-${impl} instead")
     )
   endif()
 endforeach()
+
+#
+# Separate per-ISA object compilation (replaces the single-TU amalgamation).
+#
+# The std::simd kernel needs a GLOBAL -march per translation unit (its always_inline
+# ops carry no per-function target attribute), so each backend is compiled as its own
+# object with its own flags and linked together; the runtime dispatcher in
+# src/implementation.cpp picks among them. Here we determine this target arch's
+# backends, their per-object flags, and the enabled subset. The library sources and
+# per-source flags are wired up in the top-level CMakeLists.txt.
+#
+# Every known backend (used to force a deterministic, uniform impl set on the library).
+set(SIMDJSON_KNOWN_IMPLEMENTATIONS
+    fallback westmere haswell icelake arm64 sve ppc64 lsx lasx rvv-vls)
+
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64|AMD64|amd64|i.86|x86")
+  set(SIMDJSON_ARCH_BACKENDS fallback westmere haswell icelake)
+  set(SIMDJSON_MARCH_fallback "")
+  set(SIMDJSON_MARCH_westmere -msse4.2 -mpclmul -mpopcnt)
+  set(SIMDJSON_MARCH_haswell  -mavx2 -mbmi -mpclmul -mlzcnt -mpopcnt)
+  set(SIMDJSON_MARCH_icelake  -mavx512f -mavx512dq -mavx512cd -mavx512bw
+                              -mavx512vbmi -mavx512vbmi2 -mavx512vl
+                              -mavx2 -mbmi -mpclmul -mlzcnt -mpopcnt)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "aarch64|arm64")
+  set(SIMDJSON_ARCH_BACKENDS fallback arm64 sve)
+  set(SIMDJSON_MARCH_fallback "")
+  set(SIMDJSON_MARCH_arm64 "")                         # NEON is baseline on aarch64
+  set(SIMDJSON_MARCH_sve -march=armv9-a+sve2 -msve-vector-bits=512)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "loongarch64")
+  set(SIMDJSON_ARCH_BACKENDS fallback lsx lasx)
+  set(SIMDJSON_MARCH_fallback "")
+  set(SIMDJSON_MARCH_lsx -mlsx)
+  set(SIMDJSON_MARCH_lasx -mlasx)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "ppc64|powerpc64")
+  set(SIMDJSON_ARCH_BACKENDS fallback ppc64)
+  set(SIMDJSON_MARCH_fallback "")
+  set(SIMDJSON_MARCH_ppc64 -mcpu=power9)
+elseif(CMAKE_SYSTEM_PROCESSOR MATCHES "riscv64")
+  set(SIMDJSON_ARCH_BACKENDS fallback rvv-vls)
+  set(SIMDJSON_MARCH_fallback "")
+  set(SIMDJSON_MARCH_rvv_vls -march=rv64gcv -mrvv-vector-bits=zvl)
+else()
+  set(SIMDJSON_ARCH_BACKENDS fallback)
+  set(SIMDJSON_MARCH_fallback "")
+endif()
+
+# Enabled subset = arch backends, filtered by SIMDJSON_IMPLEMENTATION / EXCLUDE.
+set(SIMDJSON_ENABLED_BACKENDS "")
+foreach(impl IN LISTS SIMDJSON_ARCH_BACKENDS)
+  if(impl IN_LIST SIMDJSON_EXCLUDE_IMPLEMENTATION)
+    # excluded by the user
+  elseif(SIMDJSON_IMPLEMENTATION AND NOT impl IN_LIST SIMDJSON_IMPLEMENTATION)
+    # an explicit include list was given and this backend is not in it
+  else()
+    list(APPEND SIMDJSON_ENABLED_BACKENDS "${impl}")
+  endif()
+endforeach()
+message(STATUS "simdjson: per-ISA backends (separate objects): ${SIMDJSON_ENABLED_BACKENDS}")

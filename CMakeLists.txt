@@ -124,7 +124,14 @@ include(cmake/developer-options.cmake)
 
 # ---- simdjson library ----
 
-set(SIMDJSON_SOURCES src/simdjson.cpp)
+# Baseline TU (shared tables + the runtime dispatcher) plus one object per enabled
+# backend. Each per-ISA object is compiled with its own global -march below; the
+# amalgamation (src/simdjson.cpp #include-ing every src/<isa>.cpp) is gone.
+# src/c_api.cpp is the extern "C" wrapper over the dispatched dom API (baseline TU).
+set(SIMDJSON_SOURCES src/simdjson.cpp src/c_api.cpp)
+foreach(impl IN LISTS SIMDJSON_ENABLED_BACKENDS)
+  list(APPEND SIMDJSON_SOURCES "src/${impl}.cpp")
+endforeach()
 
 add_library(simdjson ${SIMDJSON_SOURCES})
 add_library(simdjson::simdjson ALIAS simdjson)
@@ -182,6 +189,35 @@ if(SIMDJSON_BUILD_STATIC_LIB)
     target_precompile_headers(simdjson_static REUSE_FROM simdjson)
   endif()
 endif()
+
+# ---- Per-ISA object flags + uniform implementation set ----
+# Give each backend object its own global -march (the std::simd kernel needs a global
+# target, not per-function attributes) and exclude it from the precompiled header (its
+# flags differ from the baseline PCH, which GCC would otherwise reject).
+foreach(impl IN LISTS SIMDJSON_ENABLED_BACKENDS)
+  string(REPLACE "-" "_" _key "${impl}")
+  set(_opts ${SIMDJSON_MARCH_${_key}})
+  set_source_files_properties("src/${impl}.cpp" PROPERTIES SKIP_PRECOMPILE_HEADERS ON)
+  if(_opts)
+    set_source_files_properties("src/${impl}.cpp" PROPERTIES COMPILE_OPTIONS "${_opts}")
+  endif()
+endforeach()
+
+# Force the implementation set uniformly on every library TU (decoupled from each
+# object's -march) so the dispatcher in implementation.cpp and the per-ISA TUs all agree
+# on which backends exist. PRIVATE: consumers keep their own auto-detection.
+foreach(impl IN LISTS SIMDJSON_KNOWN_IMPLEMENTATIONS)
+  string(REPLACE "-" "_" _key "${impl}")
+  string(TOUPPER "${_key}" _upper)
+  if(impl IN_LIST SIMDJSON_ENABLED_BACKENDS)
+    set(_val 1)
+  else()
+    set(_val 0)
+  endif()
+  foreach(lib IN LISTS SIMDJSON_LIBRARIES)
+    target_compile_definitions("${lib}" PRIVATE "SIMDJSON_IMPLEMENTATION_${_upper}=${_val}")
+  endforeach()
+endforeach()
 
 set_target_properties(
     simdjson PROPERTIES

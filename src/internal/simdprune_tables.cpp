@@ -6,6 +6,10 @@
 #if SIMDJSON_IMPLEMENTATION_ARM64 || SIMDJSON_IMPLEMENTATION_ICELAKE || SIMDJSON_IMPLEMENTATION_HASWELL || SIMDJSON_IMPLEMENTATION_WESTMERE || SIMDJSON_IMPLEMENTATION_PPC64 || SIMDJSON_IMPLEMENTATION_LSX || SIMDJSON_IMPLEMENTATION_LASX
 
 #include <cstdint>
+// Bring in the extern declarations so these definitions get EXTERNAL linkage. Without it,
+// namespace-scope `const` tables default to internal linkage -- fine in the old single-TU
+// amalgamation, but as separate objects the per-ISA gap fills (other TUs) can't link to them.
+#include <simdjson/internal/simdprune_tables.h>
 
 namespace simdjson { // table modified and copied from
 namespace internal { // http://graphics.stanford.edu/~seander/bithacks.html#CountBitsSetTable
