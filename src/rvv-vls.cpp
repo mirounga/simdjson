@@ -1,14 +1,15 @@
 #ifndef SIMDJSON_SRC_RVV_VLS_CPP
 #define SIMDJSON_SRC_RVV_VLS_CPP
+#define SIMDJSON_IMPLEMENTATION rvv_vls
 
 #ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #include <base.h>
 #endif // SIMDJSON_CONDITIONAL_INCLUDE
 
-#include <simdjson/rvv-vls.h>
-#include <simdjson/rvv-vls/implementation.h>
+#include <simdjson/generic/umbrella.h>
+#include <simdjson/generic/implementation.h>
 
-#include <simdjson/rvv-vls/begin.h>
+#include <simdjson/generic/begin.h>
 #include <generic/amalgamated.h>
 #include <generic/stage1/amalgamated.h>
 #include <generic/stage2/amalgamated.h>
@@ -117,6 +118,6 @@ simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *
 } // namespace rvv_vls
 } // namespace simdjson
 
-#include <simdjson/rvv-vls/end.h>
+#include <simdjson/generic/end.h>
 
 #endif // SIMDJSON_SRC_RVV_VLS_CPP

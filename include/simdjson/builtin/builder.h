@@ -6,31 +6,11 @@
 
 #include "simdjson/generic/builder/dependencies.h"
 
+#define SIMDJSON_IMPLEMENTATION SIMDJSON_BUILTIN_IMPLEMENTATION
 #define SIMDJSON_CONDITIONAL_INCLUDE
-
-#if SIMDJSON_BUILTIN_IMPLEMENTATION_IS(arm64)
-#include "simdjson/arm64/builder.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(fallback)
-#include "simdjson/fallback/builder.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(haswell)
-#include "simdjson/haswell/builder.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(icelake)
-#include "simdjson/icelake/builder.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(ppc64)
-#include "simdjson/ppc64/builder.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(westmere)
-#include "simdjson/westmere/builder.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(lsx)
-#include "simdjson/lsx/builder.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(lasx)
-#include "simdjson/lasx/builder.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(rvv_vls)
-#include "simdjson/rvv-vls/builder.h"
-#else
-#error Unknown SIMDJSON_BUILTIN_IMPLEMENTATION
-#endif
-
+#include "simdjson/generic/builder_impl.h"
 #undef SIMDJSON_CONDITIONAL_INCLUDE
+#undef SIMDJSON_IMPLEMENTATION
 
 namespace simdjson {
   /**

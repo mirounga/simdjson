@@ -1,14 +1,15 @@
 #ifndef SIMDJSON_SRC_SVE_CPP
 #define SIMDJSON_SRC_SVE_CPP
+#define SIMDJSON_IMPLEMENTATION sve
 
 #ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #include <base.h>
 #endif // SIMDJSON_CONDITIONAL_INCLUDE
 
-#include <simdjson/sve.h>
-#include <simdjson/sve/implementation.h>
+#include <simdjson/generic/umbrella.h>
+#include <simdjson/generic/implementation.h>
 
-#include <simdjson/sve/begin.h>
+#include <simdjson/generic/begin.h>
 #include <generic/amalgamated.h>
 #include <generic/stage1/amalgamated.h>
 #include <generic/stage2/amalgamated.h>
@@ -117,6 +118,6 @@ simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *
 } // namespace sve
 } // namespace simdjson
 
-#include <simdjson/sve/end.h>
+#include <simdjson/generic/end.h>
 
 #endif // SIMDJSON_SRC_SVE_CPP

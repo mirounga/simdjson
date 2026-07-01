@@ -4,30 +4,12 @@
 #define SIMDJSON_GENERIC_BASE_H
 #include "simdjson/base.h"
 // If we haven't got an implementation yet, we're in the editor, editing a generic file! Just
-// use the most advanced one we can so the most possible stuff can be tested.
+// pick the compile-time builtin so the most possible stuff can be tested. (In a real build
+// SIMDJSON_IMPLEMENTATION is always already defined by src/<isa>.cpp or builtin, so this is skipped.)
 #ifndef SIMDJSON_IMPLEMENTATION
 #include "simdjson/implementation_detection.h"
-#if SIMDJSON_IMPLEMENTATION_ICELAKE
-#include "simdjson/icelake/begin.h"
-#elif SIMDJSON_IMPLEMENTATION_HASWELL
-#include "simdjson/haswell/begin.h"
-#elif SIMDJSON_IMPLEMENTATION_WESTMERE
-#include "simdjson/westmere/begin.h"
-#elif SIMDJSON_IMPLEMENTATION_ARM64
-#include "simdjson/arm64/begin.h"
-#elif SIMDJSON_IMPLEMENTATION_PPC64
-#include "simdjson/ppc64/begin.h"
-#elif SIMDJSON_IMPLEMENTATION_LASX
-#include "simdjson/lasx/begin.h"
-#elif SIMDJSON_IMPLEMENTATION_LSX
-#include "simdjson/lsx/begin.h"
-#elif SIMDJSON_IMPLEMENTATION_RVV_VLS
-#include "simdjson/rvv-vls/begin.h"
-#elif SIMDJSON_IMPLEMENTATION_FALLBACK
-#include "simdjson/fallback/begin.h"
-#else
-#error "All possible implementations (including fallback) have been disabled! simdjson will not run."
-#endif
+#define SIMDJSON_IMPLEMENTATION SIMDJSON_BUILTIN_IMPLEMENTATION
+#include "simdjson/generic/begin.h"
 #endif // SIMDJSON_IMPLEMENTATION
 #endif // SIMDJSON_CONDITIONAL_INCLUDE
 

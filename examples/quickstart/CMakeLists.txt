@@ -1,44 +1,35 @@
 #
-# Quickstart compile tests don't require any flags
+# Quick-start drop-in tests.
 #
-
-# TODO haven't quite decided the right way to run quickstart on Windows. Needs README update.
-#
-# Note: on macOS and other platforms, the 'command' described below may not work even if the cmake builds.
-# For example, it may be necessary to specify the sysroot, which CMake does, but the 'command' does not
-# handle such niceties. On a case-by-case basis it is fixable but it requires work that CMake knows how
-# to do but that is not trivial.
+# The old model compiled src/simdjson.cpp together with a C++ example at C++11/14. That no longer
+# applies: the SIMD kernel is C++26 std::simd, and the backends are separately-compiled objects in
+# the library. So the drop-in story is now two-tier:
+#   * below-C++26 / any-language consumers -> the extern "C" API + the prebuilt dispatched library
+#   * C++26 consumers                      -> the header-only On-Demand API + the library
+# Both link the real `simdjson` target, which is exactly how a downstream project consumes it.
 #
 IF(${CMAKE_SYSTEM_NAME} MATCHES "Linux")
-  include(add_quickstart_test.cmake)
 
-  # DOM Quick Start
+  # ---- C API drop-in (compiles as C, links the dispatched library) ----
+  add_executable(quickstart_c quickstart_c.c)
+  # Link with the C++ driver so libstdc++ is pulled in for the C++ library.
+  set_target_properties(quickstart_c PROPERTIES LINKER_LANGUAGE CXX)
+  target_link_libraries(quickstart_c PRIVATE simdjson)
+  add_test(NAME quickstart_c COMMAND quickstart_c)
+  set_property(TEST quickstart_c APPEND PROPERTY LABELS quickstart acceptance)
+
+  # Same test forced onto the always-available fallback backend, proving runtime dispatch.
+  add_test(NAME quickstart_c_fallback COMMAND quickstart_c)
+  set_tests_properties(quickstart_c_fallback PROPERTIES
+    ENVIRONMENT "SIMDJSON_FORCE_IMPLEMENTATION=fallback")
+  set_property(TEST quickstart_c_fallback APPEND PROPERTY LABELS quickstart acceptance)
+
+  # ---- C++26 header-only drop-in (On-Demand) ----
   if (SIMDJSON_EXCEPTIONS)
-    add_quickstart_test(quickstart   quickstart.cpp LABELS acceptance)
-    add_quickstart_test(quickstart11 quickstart.cpp CXX_STANDARD c++11 LABELS acceptance)
-    add_quickstart_test(quickstart14 quickstart.cpp CXX_STANDARD c++14)
+    add_executable(quickstart_cpp quickstart_cpp.cpp)
+    target_link_libraries(quickstart_cpp PRIVATE simdjson)
+    add_test(NAME quickstart_cpp COMMAND quickstart_cpp)
+    set_property(TEST quickstart_cpp APPEND PROPERTY LABELS quickstart acceptance quickstart_ondemand)
   endif()
-
-  add_quickstart_test(quickstart_noexceptions   quickstart_noexceptions.cpp NO_EXCEPTIONS LABELS acceptance)
-  if(NOT SIMDJSON_STATIC_REFLECTION)
-    add_quickstart_test(quickstart_noexceptions11 quickstart_noexceptions.cpp NO_EXCEPTIONS CXX_STANDARD c++11)
-  endif(NOT SIMDJSON_STATIC_REFLECTION)
-
-  add_quickstart_test(quickstart2_noexceptions   quickstart2_noexceptions.cpp NO_EXCEPTIONS LABELS acceptance)
-  if(NOT SIMDJSON_STATIC_REFLECTION)
-    add_quickstart_test(quickstart2_noexceptions11 quickstart2_noexceptions.cpp NO_EXCEPTIONS CXX_STANDARD c++11)
-  endif(NOT SIMDJSON_STATIC_REFLECTION)
-
-  # On-Demand Quick Start
-  if (SIMDJSON_EXCEPTIONS)
-    add_quickstart_test(quickstart_ondemand   quickstart_ondemand.cpp LABELS quickstart_ondemand acceptance)
-    add_quickstart_test(quickstart_ondemand11 quickstart_ondemand.cpp CXX_STANDARD c++11 LABELS quickstart_ondemand acceptance)
-    add_quickstart_test(quickstart_ondemand14 quickstart_ondemand.cpp CXX_STANDARD c++14 LABELS quickstart_ondemand)
-  endif()
-
-  add_quickstart_test(quickstart_ondemand_noexceptions   quickstart_ondemand_noexceptions.cpp NO_EXCEPTIONS LABELS quickstart_ondemand acceptance)
-  if(NOT SIMDJSON_STATIC_REFLECTION)
-    add_quickstart_test(quickstart_ondemand_noexceptions11 quickstart_ondemand_noexceptions.cpp NO_EXCEPTIONS CXX_STANDARD c++11 LABELS quickstart_ondemand)
-  endif(NOT SIMDJSON_STATIC_REFLECTION)
 
 endif()

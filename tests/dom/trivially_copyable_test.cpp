@@ -1,5 +1,5 @@
 // This file is not part of our main, regular tests.
-#include "../singleheader/simdjson.h"
+#include "simdjson.h"
 #include <iostream>
 #include <type_traits>
 

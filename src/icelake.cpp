@@ -1,17 +1,19 @@
 #ifndef SIMDJSON_SRC_ICELAKE_CPP
 #define SIMDJSON_SRC_ICELAKE_CPP
 
+#define SIMDJSON_IMPLEMENTATION icelake
+
 #ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #include <base.h>
 #endif // SIMDJSON_CONDITIONAL_INCLUDE
 
-#include <simdjson/icelake.h>
-#include <simdjson/icelake/implementation.h>
+#include <simdjson/generic/umbrella.h>
+#include <simdjson/generic/implementation.h>
 
 // defining SIMDJSON_GENERIC_JSON_STRUCTURAL_INDEXER_CUSTOM_BIT_INDEXER allows us to provide our own bit_indexer::write
 #define SIMDJSON_GENERIC_JSON_STRUCTURAL_INDEXER_CUSTOM_BIT_INDEXER
 
-#include <simdjson/icelake/begin.h>
+#include <simdjson/generic/begin.h>
 #include <generic/amalgamated.h>
 #include <generic/stage1/amalgamated.h>
 #include <generic/stage2/amalgamated.h>
@@ -166,6 +168,6 @@ simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *
 } // namespace icelake
 } // namespace simdjson
 
-#include <simdjson/icelake/end.h>
+#include <simdjson/generic/end.h>
 
 #endif // SIMDJSON_SRC_ICELAKE_CPP

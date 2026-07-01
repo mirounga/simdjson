@@ -1,14 +1,16 @@
 #ifndef SIMDJSON_SRC_WESTMERE_CPP
 #define SIMDJSON_SRC_WESTMERE_CPP
 
+#define SIMDJSON_IMPLEMENTATION westmere
+
 #ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #include <base.h>
 #endif // SIMDJSON_CONDITIONAL_INCLUDE
 
-#include <simdjson/westmere.h>
-#include <simdjson/westmere/implementation.h>
+#include <simdjson/generic/umbrella.h>
+#include <simdjson/generic/implementation.h>
 
-#include <simdjson/westmere/begin.h>
+#include <simdjson/generic/begin.h>
 #include <generic/amalgamated.h>
 #include <generic/stage1/amalgamated.h>
 #include <generic/stage2/amalgamated.h>
@@ -119,6 +121,6 @@ simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *
 } // namespace westmere
 } // namespace simdjson
 
-#include <simdjson/westmere/end.h>
+#include <simdjson/generic/end.h>
 
 #endif // SIMDJSON_SRC_WESTMERE_CPP

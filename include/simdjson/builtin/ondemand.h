@@ -6,31 +6,11 @@
 
 #include "simdjson/generic/ondemand/dependencies.h"
 
+#define SIMDJSON_IMPLEMENTATION SIMDJSON_BUILTIN_IMPLEMENTATION
 #define SIMDJSON_CONDITIONAL_INCLUDE
-
-#if SIMDJSON_BUILTIN_IMPLEMENTATION_IS(arm64)
-#include "simdjson/arm64/ondemand.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(fallback)
-#include "simdjson/fallback/ondemand.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(haswell)
-#include "simdjson/haswell/ondemand.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(icelake)
-#include "simdjson/icelake/ondemand.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(ppc64)
-#include "simdjson/ppc64/ondemand.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(westmere)
-#include "simdjson/westmere/ondemand.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(lsx)
-#include "simdjson/lsx/ondemand.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(lasx)
-#include "simdjson/lasx/ondemand.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(rvv_vls)
-#include "simdjson/rvv-vls/ondemand.h"
-#else
-#error Unknown SIMDJSON_BUILTIN_IMPLEMENTATION
-#endif
-
+#include "simdjson/generic/ondemand.h"
 #undef SIMDJSON_CONDITIONAL_INCLUDE
+#undef SIMDJSON_IMPLEMENTATION
 
 namespace simdjson {
   /**

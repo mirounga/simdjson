@@ -1,14 +1,15 @@
 #ifndef SIMDJSON_SRC_LASX_CPP
 #define SIMDJSON_SRC_LASX_CPP
+#define SIMDJSON_IMPLEMENTATION lasx
 
 #ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #include <base.h>
 #endif // SIMDJSON_CONDITIONAL_INCLUDE
 
-#include <simdjson/lasx.h>
-#include <simdjson/lasx/implementation.h>
+#include <simdjson/generic/umbrella.h>
+#include <simdjson/generic/implementation.h>
 
-#include <simdjson/lasx/begin.h>
+#include <simdjson/generic/begin.h>
 #include <generic/amalgamated.h>
 #include <generic/stage1/amalgamated.h>
 #include <generic/stage2/amalgamated.h>
@@ -117,6 +118,6 @@ simdjson_warn_unused error_code dom_parser_implementation::parse(const uint8_t *
 } // namespace lasx
 } // namespace simdjson
 
-#include <simdjson/lasx/end.h>
+#include <simdjson/generic/end.h>
 
 #endif // SIMDJSON_SRC_LASX_CPP

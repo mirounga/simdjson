@@ -6,30 +6,13 @@
 
 #include "simdjson/generic/dependencies.h"
 
+// ISA-agnostic: the builtin implementation is the generic std::simd code compiled at the
+// consumer's own -march, in the SIMDJSON_BUILTIN_IMPLEMENTATION namespace. SIMDJSON_CONDITIONAL_INCLUDE
+// keeps the amalgamated headers in dependency order (dependencies.h above pre-declares them).
+#define SIMDJSON_IMPLEMENTATION SIMDJSON_BUILTIN_IMPLEMENTATION
 #define SIMDJSON_CONDITIONAL_INCLUDE
-
-#if SIMDJSON_BUILTIN_IMPLEMENTATION_IS(arm64)
-#include "simdjson/arm64.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(fallback)
-#include "simdjson/fallback.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(haswell)
-#include "simdjson/haswell.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(icelake)
-#include "simdjson/icelake.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(ppc64)
-#include "simdjson/ppc64.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(westmere)
-#include "simdjson/westmere.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(lasx)
-#include "simdjson/lasx.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(lsx)
-#include "simdjson/lsx.h"
-#elif SIMDJSON_BUILTIN_IMPLEMENTATION_IS(rvv_vls)
-#include "simdjson/rvv-vls.h"
-#else
-#error Unknown SIMDJSON_BUILTIN_IMPLEMENTATION
-#endif
-
+#include "simdjson/generic/umbrella.h"
 #undef SIMDJSON_CONDITIONAL_INCLUDE
+#undef SIMDJSON_IMPLEMENTATION
 
 #endif // SIMDJSON_BUILTIN_H

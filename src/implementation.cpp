@@ -22,7 +22,12 @@ bool implementation::supported_by_runtime_system() const {
 #define SIMDJSON_CONDITIONAL_INCLUDE
 
 #if SIMDJSON_IMPLEMENTATION_ARM64
-#include <simdjson/arm64/implementation.h>
+#define SIMDJSON_IMPLEMENTATION arm64
+#include <simdjson/generic/implementation.h>
+#undef SIMDJSON_IMPLEMENTATION
+namespace simdjson { namespace arm64 {
+implementation::implementation() : simdjson::implementation("arm64", "ARM NEON", internal::instruction_set::NEON) {}
+} }
 namespace simdjson {
 namespace internal {
 static const arm64::implementation* get_arm64_singleton() {
@@ -34,7 +39,12 @@ static const arm64::implementation* get_arm64_singleton() {
 #endif // SIMDJSON_IMPLEMENTATION_ARM64
 
 #if SIMDJSON_IMPLEMENTATION_SVE
-#include <simdjson/sve/implementation.h>
+#define SIMDJSON_IMPLEMENTATION sve
+#include <simdjson/generic/implementation.h>
+#undef SIMDJSON_IMPLEMENTATION
+namespace simdjson { namespace sve {
+implementation::implementation() : simdjson::implementation("sve", "ARM SVE2 (std::simd, experimental)", internal::instruction_set::NEON) {}
+} }
 namespace simdjson {
 namespace internal {
 static const sve::implementation* get_sve_singleton() {
@@ -46,8 +56,14 @@ static const sve::implementation* get_sve_singleton() {
 #endif // SIMDJSON_IMPLEMENTATION_SVE
 
 #if SIMDJSON_IMPLEMENTATION_FALLBACK
-#include <simdjson/fallback/implementation.h>
+#define SIMDJSON_IMPLEMENTATION fallback
+#include <simdjson/generic/implementation.h>
+#undef SIMDJSON_IMPLEMENTATION
 namespace simdjson {
+namespace fallback {
+implementation::implementation() : simdjson::implementation(
+  "fallback", "Generic fallback implementation", 0) {}
+} // namespace fallback
 namespace internal {
 static const fallback::implementation* get_fallback_singleton() {
   static const fallback::implementation fallback_singleton{};
@@ -59,8 +75,18 @@ static const fallback::implementation* get_fallback_singleton() {
 
 
 #if SIMDJSON_IMPLEMENTATION_HASWELL
-#include <simdjson/haswell/implementation.h>
+#define SIMDJSON_IMPLEMENTATION haswell
+#include <simdjson/generic/implementation.h>
+#undef SIMDJSON_IMPLEMENTATION
 namespace simdjson {
+namespace haswell {
+// Out-of-line ctor: metadata lives here (baseline TU); the vtable/method bodies live in
+// src/haswell.cpp compiled at -march=haswell.
+implementation::implementation() : simdjson::implementation(
+  "haswell", "Intel/AMD AVX2",
+  internal::instruction_set::AVX2 | internal::instruction_set::PCLMULQDQ |
+  internal::instruction_set::BMI1 | internal::instruction_set::BMI2) {}
+} // namespace haswell
 namespace internal {
 static const haswell::implementation* get_haswell_singleton() {
   static const haswell::implementation haswell_singleton{};
@@ -71,8 +97,19 @@ static const haswell::implementation* get_haswell_singleton() {
 #endif
 
 #if SIMDJSON_IMPLEMENTATION_ICELAKE
-#include <simdjson/icelake/implementation.h>
+#define SIMDJSON_IMPLEMENTATION icelake
+#include <simdjson/generic/implementation.h>
+#undef SIMDJSON_IMPLEMENTATION
 namespace simdjson {
+namespace icelake {
+implementation::implementation() : simdjson::implementation(
+  "icelake", "Intel/AMD AVX512",
+  internal::instruction_set::AVX2 | internal::instruction_set::PCLMULQDQ |
+  internal::instruction_set::BMI1 | internal::instruction_set::BMI2 |
+  internal::instruction_set::AVX512F | internal::instruction_set::AVX512DQ |
+  internal::instruction_set::AVX512CD | internal::instruction_set::AVX512BW |
+  internal::instruction_set::AVX512VL | internal::instruction_set::AVX512VBMI2) {}
+} // namespace icelake
 namespace internal {
 static const icelake::implementation* get_icelake_singleton() {
   static const icelake::implementation icelake_singleton{};
@@ -83,7 +120,12 @@ static const icelake::implementation* get_icelake_singleton() {
 #endif
 
 #if SIMDJSON_IMPLEMENTATION_PPC64
-#include <simdjson/ppc64/implementation.h>
+#define SIMDJSON_IMPLEMENTATION ppc64
+#include <simdjson/generic/implementation.h>
+#undef SIMDJSON_IMPLEMENTATION
+namespace simdjson { namespace ppc64 {
+implementation::implementation() : simdjson::implementation("ppc64", "PPC64 ALTIVEC", internal::instruction_set::ALTIVEC) {}
+} }
 namespace simdjson {
 namespace internal {
 static const ppc64::implementation* get_ppc64_singleton() {
@@ -95,8 +137,15 @@ static const ppc64::implementation* get_ppc64_singleton() {
 #endif // SIMDJSON_IMPLEMENTATION_PPC64
 
 #if SIMDJSON_IMPLEMENTATION_WESTMERE
-#include <simdjson/westmere/implementation.h>
+#define SIMDJSON_IMPLEMENTATION westmere
+#include <simdjson/generic/implementation.h>
+#undef SIMDJSON_IMPLEMENTATION
 namespace simdjson {
+namespace westmere {
+implementation::implementation() : simdjson::implementation(
+  "westmere", "Intel/AMD SSE4.2",
+  internal::instruction_set::SSE42 | internal::instruction_set::PCLMULQDQ) {}
+} // namespace westmere
 namespace internal {
 static const simdjson::westmere::implementation* get_westmere_singleton() {
   static const simdjson::westmere::implementation westmere_singleton{};
@@ -107,7 +156,12 @@ static const simdjson::westmere::implementation* get_westmere_singleton() {
 #endif // SIMDJSON_IMPLEMENTATION_WESTMERE
 
 #if SIMDJSON_IMPLEMENTATION_LASX
-#include <simdjson/lasx/implementation.h>
+#define SIMDJSON_IMPLEMENTATION lasx
+#include <simdjson/generic/implementation.h>
+#undef SIMDJSON_IMPLEMENTATION
+namespace simdjson { namespace lasx {
+implementation::implementation() : simdjson::implementation("lasx", "LoongArch ASX", internal::instruction_set::LASX) {}
+} }
 namespace simdjson {
 namespace internal {
 static const simdjson::lasx::implementation* get_lasx_singleton() {
@@ -119,7 +173,12 @@ static const simdjson::lasx::implementation* get_lasx_singleton() {
 #endif // SIMDJSON_IMPLEMENTATION_LASX
 
 #if SIMDJSON_IMPLEMENTATION_LSX
-#include <simdjson/lsx/implementation.h>
+#define SIMDJSON_IMPLEMENTATION lsx
+#include <simdjson/generic/implementation.h>
+#undef SIMDJSON_IMPLEMENTATION
+namespace simdjson { namespace lsx {
+implementation::implementation() : simdjson::implementation("lsx", "LoongArch SX", internal::instruction_set::LSX) {}
+} }
 namespace simdjson {
 namespace internal {
 static const simdjson::lsx::implementation* get_lsx_singleton() {
@@ -131,7 +190,12 @@ static const simdjson::lsx::implementation* get_lsx_singleton() {
 #endif // SIMDJSON_IMPLEMENTATION_LSX
 
 #if SIMDJSON_IMPLEMENTATION_RVV_VLS
-#include <simdjson/rvv-vls/implementation.h>
+#define SIMDJSON_IMPLEMENTATION rvv_vls
+#include <simdjson/generic/implementation.h>
+#undef SIMDJSON_IMPLEMENTATION
+namespace simdjson { namespace rvv_vls {
+implementation::implementation() : simdjson::implementation("rvv_vls", "RISC-V V extension", internal::instruction_set::RVV_VLS) {}
+} }
 namespace simdjson {
 namespace internal {
 static const simdjson::rvv_vls::implementation* get_rvv_vls_singleton() {
