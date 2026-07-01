@@ -31,6 +31,12 @@ struct fixed_string {
     consteval bool operator==(const fixed_string&) const noexcept = default;
 };
 
+// Explicit deduction guide: class-type NTTP use (`template <fixed_string Name>`) deduces
+// fixed_string<N> from a string literal via the constructor. Spelling the guide out marks CTAD
+// as intended and silences -Wctad-maybe-unsupported (promoted to an error under -Werror).
+template <size_t N>
+fixed_string(const char (&)[N]) -> fixed_string<N>;
+
 // Usage: [[= simdjson::rename<"first_name">]] std::string firstName;
 namespace detail {
     template <fixed_string Name>

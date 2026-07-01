@@ -114,7 +114,6 @@ if(is_top_project)
   option(SIMDJSON_INSTALL "Enable target install" ON)
   option(SIMDJSON_DEVELOPER_MODE "Enable targets for developing simdjson" OFF)
   option(BUILD_SHARED_LIBS "Build simdjson as a shared library" OFF)
-  option(SIMDJSON_SINGLEHEADER "Disable singleheader generation" ON)
 else()
   option(SIMDJSON_INSTALL "Enable target install" ${BUILD_SHARED_LIBS})
 endif()
@@ -345,14 +344,6 @@ if(SIMDJSON_INSTALL)
     include(CMakePackageConfigHelpers)
     include(GNUInstallDirs)
 
-    if(SIMDJSON_SINGLEHEADER)
-      install(
-          FILES singleheader/simdjson.h
-          DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
-          COMPONENT simdjson_Development
-      )
-    endif()
-
     install(
         TARGETS simdjson
         EXPORT simdjsonTargets
@@ -481,9 +472,6 @@ add_subdirectory(tools)  ## This needs to be before tests because of cxxopts
 # most of the data has been moved to https://github.com/simdjson/simdjson-data
 add_subdirectory(jsonexamples)
 
-if(SIMDJSON_SINGLEHEADER)
-add_subdirectory(singleheader)
-endif()
 
 
 
@@ -507,7 +495,7 @@ if(FIND_CMD AND FILE_CMD AND GREP_CMD)
   add_test(
       NAME just_ascii
       COMMAND sh -c "\
-non_ascii=$(${FIND_CMD} include src windows tools singleheader tests examples benchmark \
+non_ascii=$(${FIND_CMD} include src windows tools tests examples benchmark \
   -path benchmark/checkperf-reference -prune -name '*.h' -o -name '*.cpp' \
   -type f -exec ${FILE_CMD} '{}' \; | ${GREP_CMD} -v ASCII); \
 if [ -n \"$non_ascii\" ]; then \
