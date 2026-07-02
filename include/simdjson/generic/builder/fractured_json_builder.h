@@ -1,10 +1,8 @@
 #ifndef SIMDJSON_GENERIC_FRACTURED_JSON_BUILDER_H
 #define SIMDJSON_GENERIC_FRACTURED_JSON_BUILDER_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #include "simdjson/generic/builder/json_builder.h"
 #include "simdjson/dom/fractured_json.h"
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 #if SIMDJSON_STATIC_REFLECTION
 

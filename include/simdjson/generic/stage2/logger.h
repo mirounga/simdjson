@@ -1,9 +1,7 @@
-#ifndef SIMDJSON_SRC_GENERIC_STAGE2_LOGGER_H
+#ifndef SIMDJSON_GENERIC_STAGE2_LOGGER_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
-#define SIMDJSON_SRC_GENERIC_STAGE2_LOGGER_H
-#include <generic/stage2/base.h>
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
+#define SIMDJSON_GENERIC_STAGE2_LOGGER_H
+#include "simdjson/generic/stage2/base.h"
 
 #include <cstring>
 
@@ -97,4 +95,4 @@ namespace logger {
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 
-#endif // SIMDJSON_SRC_GENERIC_STAGE2_LOGGER_H
+#endif // SIMDJSON_GENERIC_STAGE2_LOGGER_H

@@ -1,6 +1,5 @@
 #ifndef SIMDJSON_GENERIC_ONDEMAND_RANGES_INL_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_GENERIC_ONDEMAND_RANGES_INL_H
 #include "simdjson/generic/ondemand/base.h"
 #include "simdjson/generic/ondemand/ranges.h"
@@ -8,7 +7,6 @@
 #include "simdjson/generic/ondemand/array_iterator-inl.h"
 #include "simdjson/generic/ondemand/object-inl.h"
 #include "simdjson/generic/ondemand/object_iterator-inl.h"
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 #if SIMDJSON_SUPPORTS_RANGES
 

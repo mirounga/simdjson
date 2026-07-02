@@ -1,6 +1,5 @@
 #ifndef SIMDJSON_GENERIC_ONDEMAND_OBJECT_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_GENERIC_ONDEMAND_OBJECT_H
 #include "simdjson/generic/ondemand/base.h"
 #include "simdjson/generic/implementation_simdjson_result_base.h"
@@ -8,9 +7,8 @@
 #include "simdjson/generic/ondemand/key_selector.h"
 #include <vector>
 #if SIMDJSON_STATIC_REFLECTION && SIMDJSON_SUPPORTS_CONCEPTS
-#include "simdjson/generic/ondemand/json_string_builder.h"  // for constevalutil::fixed_string
+#include "simdjson/constevalutil.h"  // for constevalutil::fixed_string
 #endif
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {

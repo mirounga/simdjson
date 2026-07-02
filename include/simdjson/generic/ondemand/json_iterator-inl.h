@@ -1,6 +1,5 @@
 #ifndef SIMDJSON_GENERIC_ONDEMAND_JSON_ITERATOR_INL_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_GENERIC_ONDEMAND_JSON_ITERATOR_INL_H
 #include "simdjson/internal/dom_parser_implementation.h"
 #include "simdjson/generic/ondemand/base.h"
@@ -10,7 +9,6 @@
 #include "simdjson/generic/ondemand/logger-inl.h"
 #include "simdjson/generic/ondemand/parser-inl.h"
 #include "simdjson/generic/ondemand/token_iterator-inl.h"
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {

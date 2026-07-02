@@ -10,11 +10,9 @@
 // scalar on this architecture -- accepted. The gap fills here are still native LASX.
 
 #ifndef SIMDJSON_LASX_SIMD_GAPS_H
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_LASX_SIMD_GAPS_H
 #include "simdjson/generic/intrinsics.h"              // <lsxintrin.h> + <lasxintrin.h>
 #include "simdjson/internal/simdprune_tables.h"    // thintable_epi8, BitsSetTable256mul2, pshufb_combine_table
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {

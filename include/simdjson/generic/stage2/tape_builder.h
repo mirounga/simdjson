@@ -1,16 +1,14 @@
-#ifndef SIMDJSON_SRC_GENERIC_STAGE2_TAPE_BUILDER_H
+#ifndef SIMDJSON_GENERIC_STAGE2_TAPE_BUILDER_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
-#define SIMDJSON_SRC_GENERIC_STAGE2_TAPE_BUILDER_H
-#include <generic/stage2/base.h>
-#include <generic/stage2/json_iterator.h>
-#include <generic/stage2/stringparsing.h>
-#include <generic/stage2/tape_writer.h>
+#define SIMDJSON_GENERIC_STAGE2_TAPE_BUILDER_H
+#include "simdjson/generic/stage2/base.h"
+#include "simdjson/generic/stage2/json_iterator.h"
+#include "simdjson/generic/stage2/stringparsing.h"
+#include "simdjson/generic/stage2/tape_writer.h"
 #include <simdjson/dom/document.h>
 #include <simdjson/generic/atomparsing.h>
 #include <simdjson/generic/dom_parser_implementation.h>
 #include <simdjson/generic/numberparsing.h>
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 
 namespace simdjson {
@@ -435,4 +433,4 @@ simdjson_inline void tape_builder_impl<UNPADDED>::on_end_string(uint8_t *dst) no
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 
-#endif // SIMDJSON_SRC_GENERIC_STAGE2_TAPE_BUILDER_H
+#endif // SIMDJSON_GENERIC_STAGE2_TAPE_BUILDER_H

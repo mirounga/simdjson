@@ -1,6 +1,5 @@
 #ifndef SIMDJSON_GENERIC_ONDEMAND_PARSER_INL_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_GENERIC_ONDEMAND_PARSER_INL_H
 #include "simdjson/padded_string.h"
 #include "simdjson/padded_string_view.h"
@@ -11,7 +10,6 @@
 #include "simdjson/generic/ondemand/document_stream.h"
 #include "simdjson/generic/ondemand/parser.h"
 #include "simdjson/generic/ondemand/raw_json_string.h"
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {

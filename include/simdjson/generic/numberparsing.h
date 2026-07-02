@@ -1,12 +1,11 @@
 #ifndef SIMDJSON_GENERIC_NUMBERPARSING_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_GENERIC_NUMBERPARSING_H
 #include "simdjson/generic/base.h"
 #include "simdjson/generic/jsoncharutils.h"
 #include "simdjson/generic/atomparsing.h"
 #include "simdjson/internal/numberparsing_tables.h"
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
+// Header-only inline float parse/format (formerly src/from_chars.cpp / src/to_chars.cpp).
 
 #include <limits>
 #include <ostream>

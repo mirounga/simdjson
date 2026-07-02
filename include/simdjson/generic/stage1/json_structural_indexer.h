@@ -1,15 +1,13 @@
-#ifndef SIMDJSON_SRC_GENERIC_STAGE1_JSON_STRUCTURAL_INDEXER_H
+#ifndef SIMDJSON_GENERIC_STAGE1_JSON_STRUCTURAL_INDEXER_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
-#define SIMDJSON_SRC_GENERIC_STAGE1_JSON_STRUCTURAL_INDEXER_H
-#include <generic/stage1/base.h>
-#include <generic/stage1/utf8_lookup4_algorithm.h>
-#include <generic/stage1/buf_block_reader.h>
-#include <generic/stage1/json_string_scanner.h>
-#include <generic/stage1/json_scanner.h>
-#include <generic/stage1/json_minifier.h>
-#include <generic/stage1/find_next_document_index.h>
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
+#define SIMDJSON_GENERIC_STAGE1_JSON_STRUCTURAL_INDEXER_H
+#include "simdjson/generic/stage1/base.h"
+#include "simdjson/generic/stage1/utf8_lookup4_algorithm.h"
+#include "simdjson/generic/stage1/buf_block_reader.h"
+#include "simdjson/generic/stage1/json_string_scanner.h"
+#include "simdjson/generic/stage1/json_scanner.h"
+#include "simdjson/generic/stage1/json_minifier.h"
+#include "simdjson/generic/stage1/find_next_document_index.h"
 
 // This file contains the common code every implementation uses in stage1
 // It is intended to be included multiple times and compiled multiple times
@@ -404,4 +402,4 @@ simdjson_inline error_code json_structural_indexer::finish(dom_parser_implementa
 // Clear CUSTOM_BIT_INDEXER so other implementations can set it if they need to.
 #undef SIMDJSON_GENERIC_JSON_STRUCTURAL_INDEXER_CUSTOM_BIT_INDEXER
 
-#endif // SIMDJSON_SRC_GENERIC_STAGE1_JSON_STRUCTURAL_INDEXER_H
+#endif // SIMDJSON_GENERIC_STAGE1_JSON_STRUCTURAL_INDEXER_H

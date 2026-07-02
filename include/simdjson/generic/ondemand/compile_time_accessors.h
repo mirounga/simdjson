@@ -41,10 +41,8 @@
  */
 #ifndef SIMDJSON_GENERIC_ONDEMAND_COMPILE_TIME_ACCESSORS_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_GENERIC_ONDEMAND_COMPILE_TIME_ACCESSORS_H
 
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 // Arguably, we should just check SIMDJSON_STATIC_REFLECTION since it
 // is unlikely that we will have reflection support without concepts support.

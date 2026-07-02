@@ -4,18 +4,14 @@
 
 SIMDJSON_PUSH_DISABLE_UNUSED_WARNINGS
 
+
+
 #include <to_chars.cpp>
 #include <from_chars.cpp>
 #include <internal/error_tables.cpp>
 #include <internal/jsoncharutils_tables.cpp>
 #include <internal/numberparsing_tables.cpp>
 #include <internal/simdprune_tables.cpp>
-
-#include <simdjson/generic/dependencies.h>
-#include <generic/dependencies.h>
-#include <generic/stage1/dependencies.h>
-#include <generic/stage2/dependencies.h>
-
 #include <implementation.cpp>
 
 // NOTE: the per-ISA backends (src/<isa>.cpp) are NO LONGER amalgamated into this TU.

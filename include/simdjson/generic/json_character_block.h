@@ -1,9 +1,7 @@
-#ifndef SIMDJSON_SRC_GENERIC_JSON_CHARACTER_BLOCK_H
+#ifndef SIMDJSON_GENERIC_JSON_CHARACTER_BLOCK_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
-#define SIMDJSON_SRC_GENERIC_JSON_CHARACTER_BLOCK_H
-#include <generic/base.h>
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
+#define SIMDJSON_GENERIC_JSON_CHARACTER_BLOCK_H
+#include "simdjson/generic/base.h"
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
@@ -24,4 +22,4 @@ struct json_character_block {
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 
-#endif // SIMDJSON_SRC_GENERIC_JSON_CHARACTER_BLOCK_H
+#endif // SIMDJSON_GENERIC_JSON_CHARACTER_BLOCK_H

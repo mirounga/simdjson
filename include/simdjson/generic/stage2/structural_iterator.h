@@ -1,10 +1,8 @@
-#ifndef SIMDJSON_SRC_GENERIC_STAGE2_STRUCTURAL_ITERATOR_H
+#ifndef SIMDJSON_GENERIC_STAGE2_STRUCTURAL_ITERATOR_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
-#define SIMDJSON_SRC_GENERIC_STAGE2_STRUCTURAL_ITERATOR_H
-#include <generic/stage2/base.h>
+#define SIMDJSON_GENERIC_STAGE2_STRUCTURAL_ITERATOR_H
+#include "simdjson/generic/stage2/base.h"
 #include <simdjson/generic/dom_parser_implementation.h>
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
@@ -61,4 +59,4 @@ public:
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 
-#endif // SIMDJSON_SRC_GENERIC_STAGE2_STRUCTURAL_ITERATOR_H
+#endif // SIMDJSON_GENERIC_STAGE2_STRUCTURAL_ITERATOR_H

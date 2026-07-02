@@ -1,11 +1,9 @@
 #include <cstdint>
-#ifndef SIMDJSON_SRC_GENERIC_STAGE2_STRINGPARSING_H
+#ifndef SIMDJSON_GENERIC_STAGE2_STRINGPARSING_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
-#define SIMDJSON_SRC_GENERIC_STAGE2_STRINGPARSING_H
-#include <generic/stage2/base.h>
+#define SIMDJSON_GENERIC_STAGE2_STRINGPARSING_H
+#include "simdjson/generic/stage2/base.h"
 #include <simdjson/generic/jsoncharutils.h>
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 // This file contains the common code every implementation uses
 // It is intended to be included multiple times and compiled multiple times
@@ -316,4 +314,4 @@ simdjson_warn_unused simdjson_inline uint8_t *parse_wobbly_string(const uint8_t 
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 
-#endif // SIMDJSON_SRC_GENERIC_STAGE2_STRINGPARSING_H
+#endif // SIMDJSON_GENERIC_STAGE2_STRINGPARSING_H

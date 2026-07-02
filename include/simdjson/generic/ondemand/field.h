@@ -1,12 +1,10 @@
 #ifndef SIMDJSON_GENERIC_ONDEMAND_FIELD_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_GENERIC_ONDEMAND_FIELD_H
 #include "simdjson/generic/ondemand/base.h"
 #include "simdjson/generic/implementation_simdjson_result_base.h"
 #include "simdjson/generic/ondemand/raw_json_string.h"
 #include "simdjson/generic/ondemand/value.h"
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {

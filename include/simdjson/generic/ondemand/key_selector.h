@@ -1,12 +1,10 @@
 #ifndef SIMDJSON_GENERIC_ONDEMAND_KEY_SELECTOR_H
 #define SIMDJSON_GENERIC_ONDEMAND_KEY_SELECTOR_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #include "simdjson/base.h"
 #include "simdjson/common_defs.h"
 #include "simdjson/constevalutil.h"
 #include "simdjson/generic/ondemand/raw_json_string.h"
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 #include <array>
 #include <string>      // std::string (key_selector::describe)

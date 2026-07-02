@@ -1,11 +1,8 @@
 #if SIMDJSON_SUPPORTS_CONCEPTS
 
 #ifndef SIMDJSON_ONDEMAND_DESERIALIZE_H
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_ONDEMAND_DESERIALIZE_H
 #include "simdjson/generic/ondemand/base.h"
-#include "simdjson/generic/ondemand/array.h"
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 

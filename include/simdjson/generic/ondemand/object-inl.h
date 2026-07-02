@@ -1,6 +1,5 @@
 #ifndef SIMDJSON_GENERIC_ONDEMAND_OBJECT_INL_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_GENERIC_ONDEMAND_OBJECT_INL_H
 #include "simdjson/generic/ondemand/base.h"
 #include "simdjson/generic/ondemand/field.h"
@@ -15,10 +14,9 @@
 #include <tuple> // std::forward_as_tuple/get for the variadic for_each adapter
 #endif
 #if SIMDJSON_STATIC_REFLECTION
-#include "simdjson/generic/ondemand/json_string_builder.h"  // for constevalutil::fixed_string
+#include "simdjson/constevalutil.h"  // for constevalutil::fixed_string
 #include <meta>
 #endif
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {

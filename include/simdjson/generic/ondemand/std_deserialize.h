@@ -1,13 +1,11 @@
 #if SIMDJSON_SUPPORTS_CONCEPTS
 
-#ifndef SIMDJSON_ONDEMAND_DESERIALIZE_H
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
-#define SIMDJSON_ONDEMAND_DESERIALIZE_H
+#ifndef SIMDJSON_ONDEMAND_STD_DESERIALIZE_H
+#define SIMDJSON_ONDEMAND_STD_DESERIALIZE_H
 #include "simdjson/generic/ondemand/object.h"
 #include "simdjson/generic/ondemand/array.h"
 #include "simdjson/generic/ondemand/base.h"
 #include "simdjson/annotations.h"
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 #include <concepts>
 #include <limits>
@@ -770,5 +768,5 @@ error_code tag_invoke(deserialize_tag, auto &val, std::unique_ptr<int> &out) noe
 
 } // namespace simdjson
 
-#endif // SIMDJSON_ONDEMAND_DESERIALIZE_H
+#endif // SIMDJSON_ONDEMAND_STD_DESERIALIZE_H
 #endif // SIMDJSON_SUPPORTS_CONCEPTS

@@ -1,9 +1,7 @@
 #ifndef SIMDJSON_GENERIC_STRING_BUILDER_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_GENERIC_STRING_BUILDER_H
 #include "simdjson/generic/implementation_simdjson_result_base.h"
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 

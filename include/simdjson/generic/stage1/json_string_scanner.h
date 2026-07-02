@@ -1,10 +1,8 @@
-#ifndef SIMDJSON_SRC_GENERIC_STAGE1_JSON_STRING_SCANNER_H
+#ifndef SIMDJSON_GENERIC_STAGE1_JSON_STRING_SCANNER_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
-#define SIMDJSON_SRC_GENERIC_STAGE1_JSON_STRING_SCANNER_H
-#include <generic/stage1/base.h>
-#include <generic/stage1/json_escape_scanner.h>
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
+#define SIMDJSON_GENERIC_STAGE1_JSON_STRING_SCANNER_H
+#include "simdjson/generic/stage1/base.h"
+#include "simdjson/generic/stage1/json_escape_scanner.h"
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
@@ -96,4 +94,4 @@ simdjson_really_inline error_code json_string_scanner::finish() {
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 
-#endif // SIMDJSON_SRC_GENERIC_STAGE1_JSON_STRING_SCANNER_H
+#endif // SIMDJSON_GENERIC_STAGE1_JSON_STRING_SCANNER_H

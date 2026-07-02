@@ -1,6 +1,5 @@
 #ifndef SIMDJSON_GENERIC_BASE_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_GENERIC_BASE_H
 #include "simdjson/base.h"
 // If we haven't got an implementation yet, we're in the editor, editing a generic file! Just
@@ -11,7 +10,6 @@
 #define SIMDJSON_IMPLEMENTATION SIMDJSON_BUILTIN_IMPLEMENTATION
 #include "simdjson/generic/begin.h"
 #endif // SIMDJSON_IMPLEMENTATION
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {

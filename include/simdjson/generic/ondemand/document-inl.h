@@ -1,6 +1,5 @@
 #ifndef SIMDJSON_GENERIC_ONDEMAND_DOCUMENT_INL_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_GENERIC_ONDEMAND_DOCUMENT_INL_H
 #include "simdjson/generic/ondemand/base.h"
 #include "simdjson/generic/ondemand/array_iterator.h"
@@ -14,7 +13,6 @@
 #include "simdjson/generic/ondemand/object-inl.h"
 #include "simdjson/generic/ondemand/value_iterator-inl.h"
 #include "simdjson/generic/ondemand/deserialize.h"
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 #include <limits>
 

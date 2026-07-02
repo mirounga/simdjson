@@ -1,10 +1,8 @@
-#ifndef SIMDJSON_SRC_GENERIC_STAGE2_TAPE_WRITER_H
+#ifndef SIMDJSON_GENERIC_STAGE2_TAPE_WRITER_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
-#define SIMDJSON_SRC_GENERIC_STAGE2_TAPE_WRITER_H
-#include <generic/stage2/base.h>
+#define SIMDJSON_GENERIC_STAGE2_TAPE_WRITER_H
+#include "simdjson/generic/stage2/base.h"
 #include <simdjson/internal/tape_type.h>
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 #include <cstring>
 
@@ -129,4 +127,4 @@ simdjson_inline void tape_writer::append_bigint(const uint8_t *src, size_t len, 
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 
-#endif // SIMDJSON_SRC_GENERIC_STAGE2_TAPE_WRITER_H
+#endif // SIMDJSON_GENERIC_STAGE2_TAPE_WRITER_H

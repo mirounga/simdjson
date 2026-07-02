@@ -1,11 +1,9 @@
 #ifndef SIMDJSON_GENERIC_JSONCHARUTILS_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_GENERIC_JSONCHARUTILS_H
 #include "simdjson/generic/base.h"
 #include "simdjson/internal/jsoncharutils_tables.h"
 #include "simdjson/internal/numberparsing_tables.h"
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {

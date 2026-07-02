@@ -15,10 +15,8 @@
 // Included by rvv-vls/simd.h between simd_block.h and simd_kernel.h.
 
 #ifndef SIMDJSON_RVV_VLS_SIMD_GAPS_H
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_RVV_VLS_SIMD_GAPS_H
 #include "simdjson/generic/intrinsics.h"           // <riscv_vector.h>
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {

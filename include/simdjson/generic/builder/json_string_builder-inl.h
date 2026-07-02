@@ -5,10 +5,8 @@
 #include <type_traits>
 #ifndef SIMDJSON_GENERIC_STRING_BUILDER_INL_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_GENERIC_STRING_BUILDER_INL_H
 #include "simdjson/generic/builder/json_string_builder.h"
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 /*
  * Empirically, we have found that an inlined optimization is important for

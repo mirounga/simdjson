@@ -1,12 +1,11 @@
 #ifndef SIMDJSON_GENERIC_ONDEMAND_ARRAY_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_GENERIC_ONDEMAND_ARRAY_H
 #include "simdjson/generic/ondemand/base.h"
+#include "simdjson/generic/ondemand/deserialize.h"
 #include "simdjson/generic/implementation_simdjson_result_base.h"
 #include "simdjson/generic/ondemand/value_iterator.h"
 #include <vector>
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {

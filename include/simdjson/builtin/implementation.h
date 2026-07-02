@@ -3,7 +3,6 @@
 
 #include "simdjson/builtin/base.h"
 
-#include "simdjson/generic/dependencies.h"
 
 #define SIMDJSON_IMPLEMENTATION SIMDJSON_BUILTIN_IMPLEMENTATION
 #include "simdjson/generic/implementation.h"

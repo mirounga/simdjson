@@ -9,10 +9,8 @@
 // between simd_block.h and simd_kernel.h.
 
 #ifndef SIMDJSON_FALLBACK_SIMD_GAPS_H
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_FALLBACK_SIMD_GAPS_H
 #include "simdjson/base.h"
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {

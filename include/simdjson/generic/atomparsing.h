@@ -1,10 +1,8 @@
 #ifndef SIMDJSON_GENERIC_ATOMPARSING_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_GENERIC_ATOMPARSING_H
 #include "simdjson/generic/base.h"
 #include "simdjson/generic/jsoncharutils.h"
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 #include <cstring>
 

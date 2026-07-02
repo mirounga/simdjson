@@ -12,10 +12,8 @@
 // by sve/simd.h between simd_block.h and simd_kernel.h.
 
 #ifndef SIMDJSON_SVE_SIMD_GAPS_H
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_SVE_SIMD_GAPS_H
 #include "simdjson/generic/intrinsics.h"   // <arm_sve.h>
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {

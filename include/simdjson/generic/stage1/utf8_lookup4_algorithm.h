@@ -1,10 +1,8 @@
-#ifndef SIMDJSON_SRC_GENERIC_STAGE1_UTF8_LOOKUP4_ALGORITHM_H
+#ifndef SIMDJSON_GENERIC_STAGE1_UTF8_LOOKUP4_ALGORITHM_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
-#define SIMDJSON_SRC_GENERIC_STAGE1_UTF8_LOOKUP4_ALGORITHM_H
-#include <generic/stage1/base.h>
-#include <generic/dom_parser_implementation.h>
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
+#define SIMDJSON_GENERIC_STAGE1_UTF8_LOOKUP4_ALGORITHM_H
+#include "simdjson/generic/stage1/base.h"
+#include "simdjson/generic/dom_parser_implementation.h"
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
@@ -188,4 +186,4 @@ using namespace simd;
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 
-#endif // SIMDJSON_SRC_GENERIC_STAGE1_UTF8_LOOKUP4_ALGORITHM_H
+#endif // SIMDJSON_GENERIC_STAGE1_UTF8_LOOKUP4_ALGORITHM_H

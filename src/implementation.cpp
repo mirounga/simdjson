@@ -2,7 +2,6 @@
 #define SIMDJSON_SRC_IMPLEMENTATION_CPP
 
 #include <base.h>
-#include <simdjson/generic/dependencies.h>
 #include <simdjson/implementation.h>
 #include <internal/isadetection.h>
 
@@ -19,7 +18,6 @@ bool implementation::supported_by_runtime_system() const {
 
 } // namespace simdjson
 
-#define SIMDJSON_CONDITIONAL_INCLUDE
 
 #if SIMDJSON_IMPLEMENTATION_ARM64
 #define SIMDJSON_IMPLEMENTATION arm64
@@ -206,7 +204,6 @@ static const simdjson::rvv_vls::implementation* get_rvv_vls_singleton() {
 } // namespace simdjson
 #endif // SIMDJSON_IMPLEMENTATION_RVV_VLS
 
-#undef SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 namespace internal {

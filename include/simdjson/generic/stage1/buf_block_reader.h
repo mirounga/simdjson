@@ -1,9 +1,7 @@
-#ifndef SIMDJSON_SRC_GENERIC_STAGE1_BUF_BLOCK_READER_H
+#ifndef SIMDJSON_GENERIC_STAGE1_BUF_BLOCK_READER_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
-#define SIMDJSON_SRC_GENERIC_STAGE1_BUF_BLOCK_READER_H
-#include <generic/stage1/base.h>
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
+#define SIMDJSON_GENERIC_STAGE1_BUF_BLOCK_READER_H
+#include "simdjson/generic/stage1/base.h"
 
 #include <cstring>
 
@@ -113,4 +111,4 @@ simdjson_inline void buf_block_reader<STEP_SIZE>::advance() {
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 
-#endif // SIMDJSON_SRC_GENERIC_STAGE1_BUF_BLOCK_READER_H
+#endif // SIMDJSON_GENERIC_STAGE1_BUF_BLOCK_READER_H

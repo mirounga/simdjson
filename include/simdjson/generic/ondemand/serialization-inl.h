@@ -1,6 +1,5 @@
 #ifndef SIMDJSON_GENERIC_ONDEMAND_SERIALIZATION_INL_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_GENERIC_ONDEMAND_SERIALIZATION_INL_H
 #include "simdjson/generic/ondemand/base.h"
 #include "simdjson/generic/ondemand/array.h"
@@ -12,7 +11,6 @@
 #if SIMDJSON_STATIC_REFLECTION
 #include "simdjson/generic/builder/json_builder.h"
 #endif
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 

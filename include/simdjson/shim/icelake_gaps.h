@@ -7,10 +7,8 @@
 // native vpcompressb for compress. Included by icelake/simd.h between simd_block.h and simd_kernel.h.
 
 #ifndef SIMDJSON_ICELAKE_SIMD_GAPS_H
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_ICELAKE_SIMD_GAPS_H
 #include "simdjson/generic/intrinsics.h"           // <immintrin.h>
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {

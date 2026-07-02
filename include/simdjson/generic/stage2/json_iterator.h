@@ -1,11 +1,9 @@
-#ifndef SIMDJSON_SRC_GENERIC_STAGE2_JSON_ITERATOR_H
+#ifndef SIMDJSON_GENERIC_STAGE2_JSON_ITERATOR_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
-#define SIMDJSON_SRC_GENERIC_STAGE2_JSON_ITERATOR_H
-#include <generic/stage2/base.h>
-#include <generic/stage2/logger.h>
+#define SIMDJSON_GENERIC_STAGE2_JSON_ITERATOR_H
+#include "simdjson/generic/stage2/base.h"
+#include "simdjson/generic/stage2/logger.h"
 #include <simdjson/generic/dom_parser_implementation.h>
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
@@ -351,4 +349,4 @@ simdjson_warn_unused simdjson_inline error_code json_iterator::visit_primitive(V
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 
-#endif // SIMDJSON_SRC_GENERIC_STAGE2_JSON_ITERATOR_H
+#endif // SIMDJSON_GENERIC_STAGE2_JSON_ITERATOR_H

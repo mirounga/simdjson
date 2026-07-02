@@ -1,11 +1,9 @@
 #ifndef SIMDJSON_GENERIC_BUILDER_H
 
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
-#define SIMDJSON_GENERIC_STRING_BUILDER_H
+#define SIMDJSON_GENERIC_BUILDER_H
 #include "simdjson/generic/builder/json_string_builder.h"
 #include "simdjson/concepts.h"
 #include "simdjson/annotations.h"
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 #if SIMDJSON_STATIC_REFLECTION
 
 #include <charconv>

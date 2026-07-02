@@ -7,11 +7,9 @@
 // std::simd::cat. Included by arm64/simd.h between simd_block.h and simd_kernel.h.
 
 #ifndef SIMDJSON_ARM64_SIMD_GAPS_H
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_ARM64_SIMD_GAPS_H
 #include "simdjson/generic/intrinsics.h"             // <arm_neon.h>
 #include "simdjson/internal/simdprune_tables.h"    // thintable_epi8, ...
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {

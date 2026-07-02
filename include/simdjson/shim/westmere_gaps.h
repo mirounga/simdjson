@@ -7,11 +7,9 @@
 // std::simd::cat. Included by westmere/simd.h between simd_block.h and simd_kernel.h.
 
 #ifndef SIMDJSON_WESTMERE_SIMD_GAPS_H
-#ifndef SIMDJSON_CONDITIONAL_INCLUDE
 #define SIMDJSON_WESTMERE_SIMD_GAPS_H
 #include "simdjson/generic/intrinsics.h"          // <emmintrin.h> etc.
 #include "simdjson/internal/simdprune_tables.h"    // thintable_epi8, ...
-#endif // SIMDJSON_CONDITIONAL_INCLUDE
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
