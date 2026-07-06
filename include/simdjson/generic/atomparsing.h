@@ -8,7 +8,6 @@
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
-namespace {
 /// @private
 namespace atomparsing {
 
@@ -158,7 +157,6 @@ simdjson_inline bool is_valid_inf_atom(const uint8_t *src, size_t len) {
 #endif // SIMDJSON_ENABLE_NAN_INF
 
 } // namespace atomparsing
-} // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 

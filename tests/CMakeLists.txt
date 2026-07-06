@@ -2,6 +2,24 @@
 # C++-only internal flags (it is compiled as C). It links simdjson explicitly.
 add_subdirectory(c_api)
 
+# Header-only acceptance test. Created BEFORE the directory-wide link_libraries() calls below so it
+# inherits NONE of them: it links ONLY simdjson::simdjson_header_only (headers + SIMDJSON_HEADER_ONLY=1),
+# proving a header-only consumer needs no library. Two variants exercise both code paths:
+#   - default -march  -> builtin resolves to the baseline backend (portable std::simd shim)
+#   - -march=native   -> builtin resolves to the host's native SIMD backend
+if(SIMDJSON_STATIC_REFLECTION AND SIMDJSON_DEVELOPER_MODE)
+  add_executable(header_only_acceptance header_only_acceptance.cpp)
+  target_link_libraries(header_only_acceptance PRIVATE simdjson::simdjson_header_only)
+  add_test(NAME header_only_acceptance COMMAND header_only_acceptance)
+  set_property(TEST header_only_acceptance APPEND PROPERTY LABELS other acceptance header_only)
+
+  add_executable(header_only_acceptance_native header_only_acceptance.cpp)
+  target_link_libraries(header_only_acceptance_native PRIVATE simdjson::simdjson_header_only)
+  target_compile_options(header_only_acceptance_native PRIVATE -march=native)
+  add_test(NAME header_only_acceptance_native COMMAND header_only_acceptance_native)
+  set_property(TEST header_only_acceptance_native APPEND PROPERTY LABELS other acceptance header_only)
+endif()
+
 # Most tests need test data, and many need windows headers.
 link_libraries(simdjson-internal-flags test-data simdjson-windows-headers)
 include(${PROJECT_SOURCE_DIR}/cmake/add_cpp_test.cmake)

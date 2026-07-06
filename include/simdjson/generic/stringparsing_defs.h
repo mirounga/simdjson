@@ -12,7 +12,6 @@
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
-namespace {
 
 using namespace simd;
 namespace dp = std::simd;
@@ -64,6 +63,5 @@ simdjson_inline escaping escaping::copy_and_find(const uint8_t *src, uint8_t *ds
   return { to_bitmask(is_backslash | is_quote | is_control) };
 }
 
-} // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson

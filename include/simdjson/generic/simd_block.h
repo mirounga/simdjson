@@ -27,7 +27,6 @@
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
-namespace {
 namespace simd {
 
 namespace dp = std::simd;
@@ -36,6 +35,5 @@ namespace dp = std::simd;
 using block = dp::vec<uint8_t, 64>;
 
 } // namespace simd
-} // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson

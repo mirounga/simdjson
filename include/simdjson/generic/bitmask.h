@@ -8,7 +8,6 @@
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
-namespace {
 
 //
 // Perform a "cumulative bitwise xor," flipping bits each time a 1 is encountered.
@@ -32,7 +31,6 @@ simdjson_inline uint64_t prefix_xor(uint64_t bitmask) {
 #endif
 }
 
-} // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 

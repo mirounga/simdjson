@@ -6,7 +6,6 @@
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
-namespace {
 namespace stage1 {
 
 /**
@@ -367,7 +366,6 @@ simdjson_inline uint32_t filter_comma_delimited(
 }
 
 } // namespace stage1
-} // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 

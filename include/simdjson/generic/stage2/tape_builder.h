@@ -13,7 +13,6 @@
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
-namespace {
 namespace stage2 {
 
 template <bool UNPADDED>
@@ -429,7 +428,6 @@ simdjson_inline void tape_builder_impl<UNPADDED>::on_end_string(uint8_t *dst) no
 }
 
 } // namespace stage2
-} // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 

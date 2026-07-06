@@ -13,7 +13,6 @@
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
-namespace {
 namespace simd {
 namespace native {
 
@@ -124,7 +123,6 @@ simdjson_inline void compress(const block value, uint64_t mask, uint8_t* output)
 
 } // namespace native
 } // namespace simd
-} // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 

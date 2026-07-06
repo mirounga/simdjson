@@ -7,7 +7,6 @@
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
-namespace {
 namespace stage1 {
 
 /**
@@ -31,12 +30,11 @@ bool generic_validate_utf8(const uint8_t * input, size_t length) {
     return c.errors() == error_code::SUCCESS;
 }
 
-bool generic_validate_utf8(const char * input, size_t length) {
+inline bool generic_validate_utf8(const char * input, size_t length) {
     return generic_validate_utf8<utf8_checker>(reinterpret_cast<const uint8_t *>(input),length);
 }
 
 } // namespace stage1
-} // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 

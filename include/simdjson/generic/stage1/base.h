@@ -5,7 +5,6 @@
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
-namespace {
 namespace stage1 {
 
 class bit_indexer;
@@ -31,7 +30,6 @@ using utf8_validation::utf8_checker;
 // the engine-only stage1 tree so DOM/ondemand-only TUs never see this undefined free function.
 simdjson_inline simd::block must_be_2_3_continuation(const simd::block prev2, const simd::block prev3);
 
-} // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 

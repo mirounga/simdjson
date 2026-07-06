@@ -10,6 +10,7 @@
 #include "simdjson/dom/array-inl.h"
 #include "simdjson/dom/object-inl.h"
 #include "simdjson/internal/tape_ref-inl.h"
+#include "simdjson/internal/to_chars-inl.h"
 
 #include <cmath>
 #include <cstring>

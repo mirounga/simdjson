@@ -1,7 +1,7 @@
-#ifndef SIMDJSON_SRC_TO_CHARS_CPP
-#define SIMDJSON_SRC_TO_CHARS_CPP
+#ifndef SIMDJSON_INTERNAL_TO_CHARS_INL_H
+#define SIMDJSON_INTERNAL_TO_CHARS_INL_H
 
-#include <base.h>
+#include "simdjson/base.h"
 
 #include <cstring>
 #include <cstdint>
@@ -912,7 +912,7 @@ format. Returns an iterator pointing past-the-end of the decimal representation.
 @note The buffer must be large enough.
 @note The result is NOT null-terminated.
 */
-char *to_chars(char *first, const char *last, double value) {
+inline char *to_chars(char *first, const char *last, double value) {
   static_cast<void>(last); // maybe unused - fix warning
   bool negative = std::signbit(value);
   if (negative) {
@@ -945,4 +945,4 @@ char *to_chars(char *first, const char *last, double value) {
 } // namespace internal
 } // namespace simdjson
 
-#endif // SIMDJSON_SRC_TO_CHARS_CPP
+#endif // SIMDJSON_INTERNAL_TO_CHARS_INL_H

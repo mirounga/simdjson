@@ -23,7 +23,7 @@
 // Under GCC 12, the intrinsic _mm512_extracti32x4_epi32 may generate 'maybe uninitialized'.
 // as a workaround, we disable warnings within the following function.
 SIMDJSON_PUSH_DISABLE_ALL_WARNINGS
-namespace simdjson { namespace icelake { namespace { namespace stage1 {
+namespace simdjson { namespace icelake { namespace stage1 {
 simdjson_inline void bit_indexer::write(uint32_t idx, uint64_t bits) {
     // In some instances, the next branch is expensive because it is mispredicted.
     // Unfortunately, in other cases,
@@ -56,7 +56,7 @@ simdjson_inline void bit_indexer::write(uint32_t idx, uint64_t bits) {
     }
     this->tail += count;
 }
-}}}}
+}}}
 SIMDJSON_POP_DISABLE_WARNINGS
 
 // The 'implementation' dispatch-class virtuals stay non-inline here so this class's vtable is emitted

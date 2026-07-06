@@ -6,7 +6,6 @@
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
-namespace {
 namespace stage1 {
 
 struct json_string_block {
@@ -90,7 +89,6 @@ simdjson_really_inline error_code json_string_scanner::finish() {
 }
 
 } // namespace stage1
-} // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 

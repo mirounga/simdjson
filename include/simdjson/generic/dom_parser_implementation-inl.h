@@ -22,7 +22,6 @@
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
 
-namespace {
 
 using namespace simd;
 
@@ -50,7 +49,6 @@ simdjson_inline simd::block must_be_2_3_continuation(const simd::block prev2, co
   return is_third_byte | is_fourth_byte;
 }
 
-} // unnamed namespace
 
 inline simdjson_warn_unused error_code dom_parser_implementation::stage1(const uint8_t *_buf, size_t _len, stage1_mode streaming) noexcept {
   this->buf = _buf;

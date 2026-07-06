@@ -16,7 +16,6 @@
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
-namespace {
 namespace stage1 {
 
 class bit_indexer {
@@ -395,7 +394,6 @@ simdjson_inline error_code json_structural_indexer::finish(dom_parser_implementa
 }
 
 } // namespace stage1
-} // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 

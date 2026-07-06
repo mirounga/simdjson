@@ -8,7 +8,6 @@
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
-namespace {
 namespace stage2 {
 
 struct tape_writer {
@@ -123,7 +122,6 @@ simdjson_inline void tape_writer::append_bigint(const uint8_t *src, size_t len, 
 }
 
 } // namespace stage2
-} // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 

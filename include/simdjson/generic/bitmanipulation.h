@@ -7,7 +7,6 @@
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
-namespace {
 
 #if defined(_MSC_VER) && !defined(_M_ARM64) && !defined(_M_X64)
 static inline unsigned char _BitScanForward64(unsigned long* ret, uint64_t x) {
@@ -74,7 +73,6 @@ simdjson_inline bool add_overflow(uint64_t value1, uint64_t value2, uint64_t *re
 #endif
 }
 
-} // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 

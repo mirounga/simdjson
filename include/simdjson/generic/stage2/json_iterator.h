@@ -7,7 +7,6 @@
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
-namespace {
 namespace stage2 {
 
 class json_iterator {
@@ -345,7 +344,6 @@ simdjson_warn_unused simdjson_inline error_code json_iterator::visit_primitive(V
 }
 
 } // namespace stage2
-} // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 

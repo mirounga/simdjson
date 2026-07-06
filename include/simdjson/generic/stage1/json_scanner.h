@@ -7,7 +7,6 @@
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
-namespace {
 namespace stage1 {
 
 /**
@@ -159,7 +158,6 @@ simdjson_warn_unused simdjson_inline error_code json_scanner::finish() {
 }
 
 } // namespace stage1
-} // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 

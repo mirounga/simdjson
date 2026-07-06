@@ -37,7 +37,15 @@ simdjson_warn_unused simdjson_inline error_code parser::allocate(size_t new_capa
     SIMDJSON_TRY( implementation->set_capacity(new_capacity) );
     SIMDJSON_TRY( implementation->set_max_depth(new_max_depth) );
   } else {
+#if SIMDJSON_HEADER_ONLY
+    // Header-only: no runtime CPU dispatch — construct the builtin backend's engine directly.
+    implementation.reset(new (std::nothrow) SIMDJSON_IMPLEMENTATION::dom_parser_implementation());
+    if (!implementation) { return MEMALLOC; }
+    SIMDJSON_TRY( implementation->set_capacity(new_capacity) );
+    SIMDJSON_TRY( implementation->set_max_depth(new_max_depth) );
+#else
     SIMDJSON_TRY( simdjson::get_active_implementation()->create_dom_parser_implementation(new_capacity, new_max_depth, implementation) );
+#endif
   }
   _capacity = new_capacity;
   _max_depth = new_max_depth;

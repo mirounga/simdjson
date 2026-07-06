@@ -6,6 +6,8 @@
 #include "simdjson/generic/atomparsing.h"
 #include "simdjson/internal/numberparsing_tables.h"
 // Header-only inline float parse/format (formerly src/from_chars.cpp / src/to_chars.cpp).
+#include "simdjson/internal/from_chars-inl.h"
+#include "simdjson/internal/to_chars-inl.h"
 
 #include <limits>
 #include <ostream>
@@ -29,7 +31,6 @@ namespace numberparsing {
 #define BIGINT_NUMBER(SRC) (BIGINT_ERROR)
 #endif
 
-namespace {
 
 // Convert a mantissa, an exponent and a sign bit into an ieee64 double.
 // The real_exponent needs to be in [0, 2046] (technically real_exponent = 2047 would be acceptable).
@@ -493,7 +494,6 @@ simdjson_inline size_t significant_digits(const uint8_t * start_digits, size_t d
   return digit_count - size_t(start - start_digits);
 }
 
-} // unnamed namespace
 
 /** @private */
 inline error_code slow_float_parsing(simdjson_unused const uint8_t * src, double* answer) {
@@ -704,7 +704,6 @@ simdjson_warn_unused simdjson_inline error_code parse_number(const uint8_t *cons
 }
 
 // Inlineable functions
-namespace {
 
 // This table can be used to characterize the final character of an integer
 // string. For JSON structural character and allowable white space characters,
@@ -1368,7 +1367,6 @@ simdjson_unused simdjson_inline simdjson_result<double> parse_double_in_string(c
   return d;
 }
 
-} // unnamed namespace
 #endif // SIMDJSON_SKIPNUMBERPARSING
 
 } // namespace numberparsing

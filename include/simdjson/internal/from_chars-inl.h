@@ -1,7 +1,7 @@
-#ifndef SIMDJSON_SRC_FROM_CHARS_CPP
-#define SIMDJSON_SRC_FROM_CHARS_CPP
+#ifndef SIMDJSON_INTERNAL_FROM_CHARS_INL_H
+#define SIMDJSON_INTERNAL_FROM_CHARS_INL_H
 
-#include <base.h>
+#include "simdjson/base.h"
 
 #include <cstdint>
 #include <cstring>
@@ -64,10 +64,10 @@ template <> constexpr int binary_format<double>::infinite_power() {
 
 template <> constexpr int binary_format<double>::sign_index() { return 63; }
 
-bool is_integer(char c)  noexcept  { return (c >= '0' && c <= '9'); }
+inline bool is_integer(char c)  noexcept  { return (c >= '0' && c <= '9'); }
 
 // This should always succeed since it follows a call to parse_number.
-decimal parse_decimal(const char *&p) noexcept {
+inline decimal parse_decimal(const char *&p) noexcept {
   decimal answer;
   answer.num_digits = 0;
   answer.decimal_point = 0;
@@ -144,7 +144,7 @@ decimal parse_decimal(const char *&p) noexcept {
 
 // This should always succeed since it follows a call to parse_number.
 // Will not read at or beyond the "end" pointer.
-decimal parse_decimal(const char *&p, const char * end) noexcept {
+inline decimal parse_decimal(const char *&p, const char * end) noexcept {
   decimal answer;
   answer.num_digits = 0;
   answer.decimal_point = 0;
@@ -222,7 +222,6 @@ decimal parse_decimal(const char *&p, const char * end) noexcept {
   return answer;
 }
 
-namespace {
 
 // remove all final zeroes
 inline void trim(decimal &h) {
@@ -231,7 +230,7 @@ inline void trim(decimal &h) {
   }
 }
 
-uint32_t number_of_digits_decimal_left_shift(decimal &h, uint32_t shift) {
+inline uint32_t number_of_digits_decimal_left_shift(decimal &h, uint32_t shift) {
   shift &= 63;
   const static uint16_t number_of_digits_decimal_left_shift_table[65] = {
       0x0000, 0x0800, 0x0801, 0x0803, 0x1006, 0x1009, 0x100D, 0x1812, 0x1817,
@@ -326,9 +325,8 @@ uint32_t number_of_digits_decimal_left_shift(decimal &h, uint32_t shift) {
   return num_new_digits;
 }
 
-} // end of anonymous namespace
 
-uint64_t round(decimal &h) {
+inline uint64_t round(decimal &h) {
   if ((h.num_digits == 0) || (h.decimal_point < 0)) {
     return 0;
   } else if (h.decimal_point > 18) {
@@ -355,7 +353,7 @@ uint64_t round(decimal &h) {
 }
 
 // computes h * 2^-shift
-void decimal_left_shift(decimal &h, uint32_t shift) {
+inline void decimal_left_shift(decimal &h, uint32_t shift) {
   if (h.num_digits == 0) {
     return;
   }
@@ -397,7 +395,7 @@ void decimal_left_shift(decimal &h, uint32_t shift) {
 }
 
 // computes h * 2^shift
-void decimal_right_shift(decimal &h, uint32_t shift) {
+inline void decimal_right_shift(decimal &h, uint32_t shift) {
   uint32_t read_index = 0;
   uint32_t write_index = 0;
 
@@ -556,18 +554,18 @@ template <typename binary> adjusted_mantissa compute_float(decimal &d) {
 }
 
 template <typename binary>
-adjusted_mantissa parse_long_mantissa(const char *first) {
+inline adjusted_mantissa parse_long_mantissa(const char *first) {
   decimal d = parse_decimal(first);
   return compute_float<binary>(d);
 }
 
 template <typename binary>
-adjusted_mantissa parse_long_mantissa(const char *first, const char *end) {
+inline adjusted_mantissa parse_long_mantissa(const char *first, const char *end) {
   decimal d = parse_decimal(first, end);
   return compute_float<binary>(d);
 }
 
-double from_chars(const char *first) noexcept {
+inline double from_chars(const char *first) noexcept {
   bool negative = first[0] == '-';
   if (negative) {
     first++;
@@ -584,7 +582,7 @@ double from_chars(const char *first) noexcept {
 }
 
 
-double from_chars(const char *first, const char *end) noexcept {
+inline double from_chars(const char *first, const char *end) noexcept {
   bool negative = first[0] == '-';
   if (negative) {
     first++;
@@ -603,4 +601,4 @@ double from_chars(const char *first, const char *end) noexcept {
 } // internal
 } // simdjson
 
-#endif // SIMDJSON_SRC_FROM_CHARS_CPP
+#endif // SIMDJSON_INTERNAL_FROM_CHARS_INL_H

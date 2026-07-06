@@ -7,6 +7,7 @@
 
 #define SIMDJSON_GENERIC_STRING_BUILDER_INL_H
 #include "simdjson/generic/builder/json_string_builder.h"
+#include "simdjson/internal/to_chars-inl.h"
 
 /*
  * Empirically, we have found that an inlined optimization is important for

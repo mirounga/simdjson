@@ -9,7 +9,6 @@
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
-namespace {
 namespace simd {
 
 // Load a 64-byte block.
@@ -51,7 +50,6 @@ simdjson_inline uint64_t compress(const block v, uint64_t mask, uint8_t* output)
 // Make `block` and the ops visible unqualified to the generic stage-1/2 code.
 using namespace simd;
 
-} // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 

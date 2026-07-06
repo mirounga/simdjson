@@ -5,7 +5,6 @@
 
 namespace simdjson {
 namespace SIMDJSON_IMPLEMENTATION {
-namespace {
 
 struct json_character_block {
   static simdjson_inline json_character_block classify(const simd::block& in);
@@ -18,7 +17,6 @@ struct json_character_block {
   uint64_t _op;
 };
 
-} // unnamed namespace
 } // namespace SIMDJSON_IMPLEMENTATION
 } // namespace simdjson
 

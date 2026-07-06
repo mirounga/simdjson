@@ -51,6 +51,25 @@
 #include "simdjson/padded_string_view.h"
 #include "simdjson/padded_string_view-inl.h"
 
+#if SIMDJSON_HEADER_ONLY
+// Header-only: instantiate the builtin backend's engine (and its concrete
+// SIMDJSON_BUILTIN_IMPLEMENTATION::dom_parser_implementation) BEFORE dom.h / ondemand.h, whose
+// parser::allocate() constructs it directly instead of dispatching through the (absent) library.
+#include "simdjson/builtin.h"
+namespace simdjson {
+// The free-function entry points normally live in the fat library (src/implementation.cpp) and
+// dispatch at runtime. Header-only has no library and no dispatch, so run the builtin engine
+// directly here — mirroring implementation::minify / implementation::validate_utf8 in each backend.
+simdjson_warn_unused inline error_code minify(const char *buf, size_t len, char *dst, size_t &dst_len) noexcept {
+  return SIMDJSON_BUILTIN_IMPLEMENTATION::stage1::json_minifier::minify<SIMDJSON_STAGE1_STEP>(
+      reinterpret_cast<const uint8_t *>(buf), len, reinterpret_cast<uint8_t *>(dst), dst_len);
+}
+simdjson_warn_unused inline bool validate_utf8(const char *buf, size_t len) noexcept {
+  return SIMDJSON_BUILTIN_IMPLEMENTATION::stage1::generic_validate_utf8(buf, len);
+}
+} // namespace simdjson
+#endif
+
 #include "simdjson/dom.h"
 #include "simdjson/builder.h"
 #include "simdjson/ondemand.h"

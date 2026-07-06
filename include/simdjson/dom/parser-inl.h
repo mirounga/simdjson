@@ -276,7 +276,14 @@ inline error_code parser::allocate(size_t capacity, size_t max_depth) noexcept {
   if (implementation) {
     err = implementation->allocate(capacity, max_depth);
   } else {
+#if SIMDJSON_HEADER_ONLY
+    // Header-only: no runtime CPU dispatch — construct the builtin backend's engine directly.
+    implementation.reset(new (std::nothrow) SIMDJSON_BUILTIN_IMPLEMENTATION::dom_parser_implementation());
+    if (!implementation) { return MEMALLOC; }
+    err = implementation->allocate(capacity, max_depth);
+#else
     err = simdjson::get_active_implementation()->create_dom_parser_implementation(capacity, max_depth, implementation);
+#endif
   }
   if (err) { return err; }
   return SUCCESS;

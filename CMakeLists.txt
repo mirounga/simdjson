@@ -284,6 +284,25 @@ else()
   simdjson_add_props(target_compile_features PUBLIC cxx_std_11)
 endif()
 
+# ---- Header-only INTERFACE target: consumers link nothing ----
+# `simdjson::simdjson_header_only` gives the headers + SIMDJSON_HEADER_ONLY=1. The builtin backend
+# (the consumer's own -march) is compiled straight into the consumer TU; there is no runtime CPU
+# dispatch and no library object to link. SIMDJSON_HEADER_ONLY is purely a consumer-side define —
+# the fat `simdjson` library above is always built in dispatch mode for the C API.
+add_library(simdjson_header_only INTERFACE)
+add_library(simdjson::simdjson_header_only ALIAS simdjson_header_only)
+target_include_directories(simdjson_header_only INTERFACE "$<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>")
+target_compile_definitions(simdjson_header_only INTERFACE SIMDJSON_HEADER_ONLY=1)
+if(SIMDJSON_STATIC_REFLECTION)
+  if(IS_BLOOMBERG_P2996_CLANG)
+    target_compile_options(simdjson_header_only INTERFACE -freflection -fexpansion-statements -stdlib=libc++ -std=c++26)
+  else()
+    target_compile_options(simdjson_header_only INTERFACE -freflection -std=c++26)
+  endif()
+else()
+  target_compile_features(simdjson_header_only INTERFACE cxx_std_11)
+endif()
+
 # workaround for GNU GCC poor AVX load/store code generation
 if(
     CMAKE_CXX_COMPILER_ID STREQUAL "GNU"
