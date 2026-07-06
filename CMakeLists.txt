@@ -281,7 +281,10 @@ if(SIMDJSON_STATIC_REFLECTION)
   )
   endif()
 else()
-  simdjson_add_props(target_compile_features PUBLIC cxx_std_11)
+  # Even without static reflection, the headers use std::simd (simd_block.h / simd_kernel.h), which
+  # requires C++26. Advertise it as a raw -std=c++26 option (CMake has no cxx_std_26 feature for these
+  # compilers yet -- same hack as the reflection branch above), NOT cxx_std_11.
+  simdjson_add_props(target_compile_options PUBLIC -std=c++26)
 endif()
 
 # ---- Header-only INTERFACE target: consumers link nothing ----
@@ -300,7 +303,8 @@ if(SIMDJSON_STATIC_REFLECTION)
     target_compile_options(simdjson_header_only INTERFACE -freflection -std=c++26)
   endif()
 else()
-  target_compile_features(simdjson_header_only INTERFACE cxx_std_11)
+  # std::simd requires C++26 even without reflection (see the main target's else branch above).
+  target_compile_options(simdjson_header_only INTERFACE -std=c++26)
 endif()
 
 # workaround for GNU GCC poor AVX load/store code generation
@@ -364,13 +368,27 @@ if(SIMDJSON_INSTALL)
     include(GNUInstallDirs)
 
     install(
-        TARGETS simdjson
+        TARGETS simdjson simdjson_header_only
         EXPORT simdjsonTargets
         RUNTIME COMPONENT simdjson_Runtime
         LIBRARY COMPONENT simdjson_Runtime
         NAMELINK_COMPONENT simdjson_Development
         ARCHIVE COMPONENT simdjson_Development
         INCLUDES DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+    )
+    # simdjson_header_only is an INTERFACE target (no artifacts); it joins the same simdjsonTargets
+    # export above, so find_package(simdjson) consumers get simdjson::simdjson_header_only. The
+    # INCLUDES DESTINATION supplies its install-tree include path (it only carries a BUILD_INTERFACE
+    # include dir otherwise). The config template already include()s simdjsonTargets.cmake.
+
+    # Install the headers themselves. Both simdjson and simdjson_header_only advertise
+    # ${CMAKE_INSTALL_INCLUDEDIR} as their INTERFACE include dir, so the header tree must land there or
+    # find_package() consumers get a "non-existent path" error and cannot find simdjson.h. (De-amalgamation
+    # removed the old single-header install; the include/ tree is now what consumers use.)
+    install(
+        DIRECTORY "${PROJECT_SOURCE_DIR}/include/"
+        DESTINATION "${CMAKE_INSTALL_INCLUDEDIR}"
+        COMPONENT simdjson_Development
     )
     configure_file(cmake/simdjson-config.cmake.in simdjson-config.cmake @ONLY)
 

@@ -7,7 +7,10 @@ add_subdirectory(c_api)
 # proving a header-only consumer needs no library. Two variants exercise both code paths:
 #   - default -march  -> builtin resolves to the baseline backend (portable std::simd shim)
 #   - -march=native   -> builtin resolves to the host's native SIMD backend
-if(SIMDJSON_STATIC_REFLECTION AND SIMDJSON_DEVELOPER_MODE)
+# NOT gated on SIMDJSON_STATIC_REFLECTION: these tests use only ondemand/dom/minify (no reflection),
+# and header-only mode compiles without reflection at C++26 -- this is the default developer build
+# where the C++-standard contract of the interface target matters most.
+if(SIMDJSON_DEVELOPER_MODE)
   add_executable(header_only_acceptance header_only_acceptance.cpp)
   target_link_libraries(header_only_acceptance PRIVATE simdjson::simdjson_header_only)
   add_test(NAME header_only_acceptance COMMAND header_only_acceptance)
